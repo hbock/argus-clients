@@ -1,0 +1,182 @@
+Content-type: text/html
+
+<HTML><HEAD><TITLE>Manpage of RAGRAPH</TITLE>
+</HEAD><BODY>
+<H1>RAGRAPH</H1>
+Section: User Commands  (1)<BR>Updated: 21 July 2001<BR><A HREF="#index">Index</A>
+<A HREF="http://localhost/cgi-bin/man/man2html">Return to Main Contents</A><HR>
+
+<A NAME="lbAB">&nbsp;</A>
+<H2>NAME</H2>
+
+<B>ragraph</B> - graph <B><A HREF="http://localhost/cgi-bin/man/man2html?8+argus">argus</A>(8)</B> data.
+<A NAME="lbAC">&nbsp;</A>
+<H2>COPYRIGHT</H2>
+
+Copyright (c) 2000-2007 QoSient. All rights reserved.
+<A NAME="lbAD">&nbsp;</A>
+<H2>SYNOPSIS</H2>
+
+<B>ragraph metric [object]</B>
+
+[<B>-M</B> <I>mode</I>] [<B>options</B>] [<B>raoptions</B>]
+<A NAME="lbAE">&nbsp;</A>
+<H2>DESCRIPTION</H2>
+
+<A NAME="ixAAB"></A>
+<P>
+
+<B>Ragraph</B>
+
+reads <B><A HREF="http://localhost/cgi-bin/man/man2html?8+argus">argus</A>(8)</B> data from an <I>argus-file</I>, and graphs
+fields of interest from matching argus flow activity records.
+You must specify the metric(s), the flow object/identifier(s)
+and the time granularity required for the graph.  Standard
+raoptions are available to filter input and specify the time
+range of interest, and graphing options are provided to specify
+x and y axis labels, titles, upper and lower range limits, 
+and plot sizes.  Support for logorithmic scaling, object stacking,
+and split graphing are provided to provide some flexibility in
+the graphs you can produce.
+<P>
+<B>Ragraph</B> supports graphing most metrics that are available
+in argus data, including, bytes, packet counts, duration, average
+duration, loss, jitter, load, and rate.  These metrics can be
+graphed in association with flow identifiers, such as source
+or destination address, network address, source identifier, 
+protocol, port numbers, services, vlan id, mpls tag, ttl, and
+tos values.  Currently, there are limits to the number of metrics
+and objects that can be graphed at one time, so assume that
+<B>ragraph</B> is a simple graphing tool.
+<P>
+By default <B>ragraph</B> writes its output to ragraph.png, in
+the current directory.  Use the '-w' raoption to specify an
+alternate output filename.
+<P>
+<B>Ragraph</B> is implemented as a perl script front-end to
+the routine <B>rabins</B> and rrd-tool, which is used to generate
+PNG formatted graphs. As a result <B>ragraph</B> support all the
+raoption and many options to the rrd-tool graphing functions.
+<P>
+<P>
+
+<A NAME="lbAF">&nbsp;</A>
+<H2>OPTIONS</H2>
+
+<DL COMPACT>
+<DT><B>-log</B>
+
+<DD>
+Use logarithmic scale for y-axis.
+<DT><B>-fill</B>
+
+<DD>
+Turn off area fill.
+<DT><B>-stack</B>
+
+<DD>
+Turn off data stacking.
+<DT><B>-split</B>
+
+<DD>
+Turn off axis splitting for src/dst(in/out) traffic.
+<DT><B>-height</B>
+
+<DD>
+Specify height in pixels for the graph (275 pixels)
+<DT><B>-width</B>
+
+<DD>
+Specify width in pixels for the graph (800 pixels)
+<DT><B>-upper</B>
+
+<DD>
+Specify upper bounds for graphing data (automatic).
+<DT><B>-lower</B>
+
+<DD>
+Specify lower bounds for graphing data (automatic).  When data is
+split, you need to specify the value as a negative number.
+<DT><B>-title</B>
+
+<DD>
+Specify a graph title.
+</DL>
+<A NAME="lbAG">&nbsp;</A>
+<H2>RA OPTIONS</H2>
+
+Ragraph, like all ra based clients, supports a number of
+<B>ra options</B> including filtering of input argus
+records through a terminating filter expression, and
+specifying an output filename using the -w option.
+<P>
+See <B><A HREF="http://localhost/cgi-bin/man/man2html?1+ra">ra</A>(1)</B> for a complete description of <B>ra options</B>.
+<A NAME="lbAH">&nbsp;</A>
+<H2>EXAMPLES</H2>
+
+<P>
+
+To graph the total load for the data in an <I>argus-file</I> argus.data
+at 10 second intervals:
+<DL COMPACT><DT><DD>
+<PRE>
+<B>ragraph bytes -M 10s -r argus.data -title &quot;Total Load&quot;
+</B></PRE>
+
+</DL>
+
+<P>
+
+To graph the rate (pkt/sec) on a destination port basis for the
+data from a specific probe in an <I>argus-file</I> argus.data at
+1 minute intervals:
+<DL COMPACT><DT><DD>
+<PRE>
+<B>ragraph bytes dport -M 1m -r argus.data - srcid 192.168.0.10
+</B></PRE>
+
+</DL>
+
+<P>
+<A NAME="lbAI">&nbsp;</A>
+<H2>AUTHORS</H2>
+
+<PRE>
+Carter Bullard (<A HREF="mailto:carter@qosient.com">carter@qosient.com</A>).
+</PRE>
+
+<A NAME="lbAJ">&nbsp;</A>
+<H2>SEE ALSO</H2>
+
+<B><A HREF="http://localhost/cgi-bin/man/man2html?5+ragraph">ragraph</A></B>(5),
+
+<B><A HREF="http://localhost/cgi-bin/man/man2html?1+ra">ra</A></B>(1),
+
+<B><A HREF="http://localhost/cgi-bin/man/man2html?5+rarc">rarc</A></B>(5),
+
+<B><A HREF="http://localhost/cgi-bin/man/man2html?8+argus">argus</A></B>(8)
+
+<B><A HREF="http://localhost/cgi-bin/man/man2html?1+tcpdump">tcpdump</A></B>(1),
+
+<P>
+
+<HR>
+<A NAME="index">&nbsp;</A><H2>Index</H2>
+<DL>
+<DT><A HREF="#lbAB">NAME</A><DD>
+<DT><A HREF="#lbAC">COPYRIGHT</A><DD>
+<DT><A HREF="#lbAD">SYNOPSIS</A><DD>
+<DT><A HREF="#lbAE">DESCRIPTION</A><DD>
+<DT><A HREF="#lbAF">OPTIONS</A><DD>
+<DT><A HREF="#lbAG">RA OPTIONS</A><DD>
+<DT><A HREF="#lbAH">EXAMPLES</A><DD>
+<DT><A HREF="#lbAI">AUTHORS</A><DD>
+<DT><A HREF="#lbAJ">SEE ALSO</A><DD>
+</DL>
+<HR>
+This document was created by
+<A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
+using the manual pages.<BR>
+Time: 13:20:15 GMT, May 16, 2007
+</BODY>
+</HTML>

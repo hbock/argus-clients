@@ -1,0 +1,81 @@
+.\" Copyright (c) 2000-2008 QoSient, LLC
+.\" All rights reserved.
+.\" 
+.\" This program is free software; you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation; either version 2, or (at your option)
+.\" any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program; if not, write to the Free Software
+.\" Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+.\"
+.TH RAGREP 1 "07 November 2000"
+.SH NAME
+\fBragrep\fP \- grep \fBargus(8)\fP user captured data.
+.SH COPYRIGHT
+Copyright (c) 2000-2008 QoSient. All rights reserved.
+.SH SYNOPSIS
+.B ragrep
+\fB\-e\fP \fI<regexp>\fP [\fB\-v\fP] [\fB\-i\fP]
+[\fBraoptions\fP] [\fB-\fP \fIfilter-expression\fP]
+.SH DESCRIPTION
+.IX  "ragrep command"  ""  "\fLragrep\fP \(em argus data"
+.LP
+.B Ragrep
+reads
+.BR argus
+data from an \fIargus-data\fP source, greps the records based on
+the regexp specified on the command line, and outputs a valid
+\fIargus-stream\fP.
+
+Ragrep works only on the fields for user captured data. Argus must be started with the configration option \fBARGUS_CAPTURE_DATA_LEN\fP set to
+a value greater than 0, to have these data captured. See \fBargus.conf(5)\fP for detail.
+
+Ragrep is based on GNU \fBgrep(1)\fP, so the \fIregexp\fP syntax is
+the same as for \fBgrep(1)\fP. 
+.SH OPTIONS
+Ragrep, like all ra based clients, supports a number of
+\fBra options\fP including filtering of input argus
+records through a terminating filter expression.
+See \fBra(1)\fP for a complete description of \fBra options\fP.
+\fBragrep(1)\fP specific options are:
+.PP
+.PD 0
+.TP 4 4
+.B \-e \fIregexp\fP
+Use the grep(1)-compatible regular expression for filtering.
+
+.TP
+.B \-i
+ignore case.
+
+.TP
+.B \-v
+Reverse the expression matching logic.
+
+
+.SH INVOCATION
+A sample invocation of \fBragrep(1)\fP.  This call reads \fBargus(8)\fP data
+from \fBinputfile\fP and greps all http transactions that generated a "404 Not Found" error.
+
+.TP 5
+\fBragrep\fP -r inputfile -e "HTTP.*404"
+
+.SH SEE ALSO
+.BR ra(1),
+.BR rarc(5),
+.BR argus(8),
+
+.SH FILES
+
+.SH AUTHORS
+.nf
+Carter Bullard (carter@qosient.com).
+.fi
+.SH BUGS

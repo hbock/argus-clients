@@ -1,0 +1,648 @@
+/*
+ * Copyright (c) 1990-2008 QoSient, LLC
+ * All rights reserved.
+ *
+ * Permission to use, copy, modify, and distribute this software and
+ * its documentation for any purpose and without fee is hereby granted,
+ * provided that the above copyright notice appear in all copies and
+ * that both that copyright notice and this permission notice appear
+ * in supporting documentation, and that the name of QoSient not be
+ * used in advertising or publicity pertaining to distribution of the
+ * software without specific, written prior permission.
+ *
+ * QOSIENT, LLC DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS
+ * SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+ * FITNESS, IN NO EVENT SHALL QOSIENT, LLC BE LIABLE FOR ANY
+ * SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER
+ * RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF
+ * CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ *
+ */
+
+Argus Frequently Asked Questions
+
+General
+   1.1    What is Argus?
+
+Argus Mailing List
+   2.1    Where is the Argus mailing list?
+   2.2    How do I join the Argus mailing list?
+   2.3    Is there a mailing list archive?
+
+Argus Source Code
+   3.1    What is the current version of Argus?
+   3.2    Where can I get Argus-3.0?
+   3.3    Who owns Argus-3.0?
+   3.4    Is Argus-3.0 an open source project?
+   3.5    What type of license is Argus distributed under?
+   3.6    Can I get involved in Argus development?
+
+Bug Reporting
+   4.1    How do I report bugs?
+
+History
+   5.1    Where did Argus start?
+   5.2    How many versions of Argus are there?
+   5.3    Is Argus-3.0 a significant change to Argus?
+
+Portability
+   6.1    What platforms does Argus run on?
+   6.2    What other programs to I need to compile Argus?
+
+Building Argus
+   7.1    How do I compile Argus?
+
+Installing Argus
+   8.1    How do I install Argus?
+
+
+Configuring Argus
+   9.1    How do I configure Argus?
+   9.2    Are there sample configurations?
+   9.3    Can I configure argus to write output to more than one file?
+
+
+Running Argus
+   10.1   How do I run Argus?
+   10.2   Do I need to be root to run Argus?
+   10.3   Can I have Argus start at boot time?
+   10.4   What are some simple examples to show me how to run Argus?
+   10.5   How do you run Argus on your systems?
+
+
+Security Considerations
+   11.1   Is there any type of access control for a remote Argus?
+   11.2   Where can I get tcp-wrappers()?
+   11.3   Is there any confidentiality protection for Argus data on the wire?
+   11.4   Where can I get SASL?
+
+
+Argus Client Programs
+   12.1   What is ra()?
+   12.2   What is racount()?
+   12.3   What is rasort()?
+   12.4   What is raxml()?
+   12.5   What is ramon()?
+   12.6   What is rapath?
+   12.7   What is ragator?
+   12.8   What is ragrep?
+   12.9   What is rasrvstats?
+   12.10  What is ratemplate?
+
+
+Problems
+   13.1   I don't think Argus is auditing all the traffic.  What could be wrong?
+
+
+Audit Management
+   14.1   Can I compress Argus log files?
+   14.2   Can I process/archive the Argus output file while Argus is running?
+   14.3   Can you suggest a daily log reporting configuration?
+   14.4   What about storing Argus logs in a database?
+
+
+General
+
+1.1. What is Argus?
+      Argus is a Real Time Flow Monitor that is designed to
+      perform comprehensive IP network traffic auditing.
+
+     ARGUS stands for Audit Record Generation and Usage System.
+
+
+Argus Mailing List
+
+2.1. Where is the Argus mailing list?
+      There are currently 3 argus mailing lists.
+
+      argus-announce@qosient.com      is used to send update notices, bug
+                                      discoveries, major changes to argus.
+
+      argus-user@qosient.com          is used to discuss the use of argus
+                                      tips, contributed software, etc....
+
+      argus-info@lists.andrew.cmu.edu this is the developers mailing list. 
+
+
+2.2. How do I join the Argus mailing list?
+      To join the any of the argus mailing lists, go to
+      http://qosient.com/argus/mailinglists.htm and follow the directions.
+
+
+2.3. Is there a mailing list archive?
+      All of the lists are archived, and the developers list is archived at
+      http://www.theorygroup.com/Archive/argus
+
+
+Argus Source Code
+
+3.1  What is the current version of Argus?
+      Argus-3.0.0
+
+3.2  Where can I get Argus-3.0?
+      Go to http://qosient.com/argus/downloads.htm to get the version
+      that you are interested in.
+
+3.3  Who owns Argus-3.0?
+      All rights to Argus-3.0 are held by QoSient, LLC, a Delaware
+      limited liability corporation that is located in New York, New York.
+
+3.4  Is Argus-3.0 an open source project?
+      Yes. The Argus-3.0 effort is intended to be "open source" in
+      the sense defined by the Open Source Initiative. Please see
+      http://www.opensource.org for details.
+
+3.5  What type of license is Argus distributed under?
+      Argus is distributed under the GNU-Public-License.
+
+      This basically means you have a lot of freedom to do what you
+      want with Argus-3.0 source code, but there are some restrictions
+      especially in the area of warranties and liabilities.  These
+      restrictions are are spelled out in detail in the LICENSE file
+      in the main distribution.
+
+      If you are interested in using Argus, but the current open
+      source license presents issues , contact argus@qosient.com to
+      discuss other licensing options that may fit.
+
+
+3.6  Can I get involved in Argus development?
+      Absolutely!  Argus source will be accessible using CVS early in 2001.
+      Join the mailing list to get all the details.
+
+
+Bug Reporting
+
+4.1  How do I report bugs?
+      Use the tool ./bin/argusbug to send your bug report
+      to the Argus mailing list.  Argusbug will present you
+      with a bug reporting form, that includes some system
+      information.  If you are unhappy providing the information
+      supplied by Argusbug, you are free to delete it.
+
+      Send any comments/fixes/opinions/whatever to the
+      mailing list.  Someone will send a reply.
+
+
+History
+
+5.1  Where did Argus start?
+      Argus got its unofficial start at the Georgia Institute
+      of Technology, in 1988.  It officially started at Carnegie
+      Mellon's Software Engineering Institute (SEI), in 1990, and
+      was released into the public domain as Argus-1.5, in early 1996. 
+
+5.2  How many versions of Argus are there?
+      There have been 8 releases of Argus, 1.5, 1.7beta, 1.7,
+      1.8, 1.8.1, 2.0, 2.0.1 and 2.0.2.  9 including this one.
+
+5.3  Is Argus-3.0 a significant change to Argus?
+      Yes!!!  Although the basic concepts are the same, 
+      Argus-3.0 is not compatible to previous versions
+      of Argus.  Please see the CHANGES document that is
+      found in ./docs/CHANGES for details.
+
+
+Portability
+
+6.1  What platforms does Argus run on?
+      Argus is developed on Mac OS X, Linux and FreeBSD, and is
+      tested extensively on OpenBSD, NetBSD and Solaris.  It has
+      been ported to IRIX, AIX, HP-UX, CrayOS, OpenWRT, Tilera,
+      and should port easily to any Unix operating system.
+
+      Because Argus uses libpcap as its packet capture interface,
+      Argus, in its current form, can only be ported to systems
+      that support libpcap.
+  
+      If you do port Argus to another platform, please send your
+      diffs to the mailing list, and we'll incorporate them into the
+      release.
+
+6.2  What other programs to I need to compile Argus?
+      Argus requires the GNU programs bison(), and its companion flex().
+      Argus can use tcp_wrappers and SASL but these are not required.
+
+
+Building Argus
+
+7.1  How do I compile Argus?
+      Building specifics for Argus are described in the ./INSTALL file.
+      The quick method is:
+
+         % ./configure
+         % make
+
+
+Installing Argus
+
+8.1  How do I install Argus?
+      Detail installation instructions are in the ./INSTALL file.
+
+      If you've got the RPM binary version, type "rpm -Uvh Argus*.rpm".
+      This will install everything.  The only thing you will need to
+      do is edit /etc/argus.conf for your specific sites needs, and
+      then your ready to go.
+
+      If you've got the source tarball, then "make install" will do
+      most everything for you.  If you are concerned about how Argus
+      will install itself, read on.
+
+      Argus does not have any installation retrictions, so you can
+      install Argus anywhere.  The makefile that is generated by
+      ./configure supports "make install".  To review where this
+      will install argus:
+
+         make -n install
+
+      If these are cool, then let the Makefile do the installation.
+      On most systems the binaries will go into /usr/local/[s]bin, and
+      the man pages will go in /usr/local/man.  The docs will go in
+      /usr/share/docs, if the system supports it, if not they will
+      not be installed.
+
+      If you plan on running Argus as a system daemon, then you should
+      install an argus configuration file as /etc/argus.conf.  This
+      provides a single point of configuration for argus as a system
+      daemon.  A sample is provided in ./support/Config/argus.conf.
+
+         # cp ./support/Config/argus.conf /etc/argus.conf
+         # chmod 600 /etc/argus.conf
+     
+      After this you will need to modify the sample configuration in
+      order to activate the collection of audit records.  You should
+      uncomment the entry #ARGUS_OUTPUT_FILE="/usr/argus/data/argus.out".
+      And, of course, if you prefer, definately modify the value for
+      the destination filname for your installation.
+
+
+      This should handle the basic installation.
+      
+
+Configuring Argus
+
+9.1  How do I configure Argus?
+      For most uses, Argus requires only a few simple configuration
+      variables to do its work.   For the custom minded, Argus
+      supports a large number of options.
+      
+      Argus accepts configuration options on the command line, but
+      Argus is generally configured using the argus.conf file that
+      is normally found in either /etc or $ARGUSHOME.  The variables
+      that are set by this file can be overriden by the use of command
+      line switches.  And on the command line you can specify an
+      alternative configuration file that is specified using the
+      "-F configfile" option.  
+
+      You can also eliminate any configuration directives in the
+      /etc/argus.conf file by using the -X option on the commandline, so
+      you have a lot of flexibility.
+
+      To setup a /etc/argus.conf file, copy the example configuration
+      to /etc and modify its values accordingly.
+
+9.2  Are there sample configurations?
+
+      Yes, ./support/Config/argus.conf is the best sample configuration
+      file, and it provides extensive descriptions of the options and
+      their default settings.  This sample file sets most of the
+      common options needed to run Argus as a system daemon.  Look at
+      the values and set them according to your specific needs.
+      Guidelines are provided in the text of the sample file.
+
+9.3  What do I need to configure?
+
+      Minimally, the only thing you need to configure is
+      is "where do you want Argus to send its output?"  For most
+      sites the default values for all options will be fine.
+
+      Argus can either write its output to a file, or to offer
+      remote access via a socket, or both.  Most sites will want to
+      write Argus output to a file, some will want to offer access
+      to Argus data via the network.  Security issues abound here,
+      so turn on remote access with some caution.
+
+9.3  Can I configure argus to write output to more than one file?
+ 
+      Yes, Argus supports writing to up to 5 outputs, mixed between
+      output files and remote sockets.  And each file can have its own
+      independant filter.  If you want all TCP transaction audits to
+      go into a TCP output file, and all other records to go to another
+      file, no problem.
+ 
+         argus -w tcp.file "tcp" -w nottcp.file "not tcp"
+
+      In the argus.conf file, you can have upto 5 ARGUS_OUTPUT_FILE
+      entries.
+
+
+
+Running Argus
+
+10.1  How do I run Argus?
+
+      Argus is run either as a persistant daemon, reading live
+      packets from a network interface, or as a user program,
+      reading packets from a packet capture file.  The default,
+      i.e. when it is run without any configuration, is to run
+      as a daemon.
+
+      If everything is installed properly, and the /etc/argus.conf
+      file is configured correctly, all you need to run argus is:
+
+         # argus
+
+      This will cause Argus to look for a configuration file in
+      /etc/argus.conf or in the $ARGUSPATH, or $ARGUSHOME directory,
+      parse it and then open the network interface to begin reading
+      packets.  Argus will write its output to whatever outputfile is
+      specified in the /etc/argus.conf file.
+
+      If you intend to remotely attach to this Argus, you'll need to
+      tell Argus what port to put a listen down on.  The default
+      port for clients is port 561.  We recommend using this port
+      number.
+
+         # argus -P 561 -w outputfile
+
+
+      In order to configure Argus to read packets from a packet 
+      capture file, use the "-r" option.
+
+         % argus -r ./packetfile
+
+      Argus has a large number of options, which can be set
+      through an .Argusrc file, the use of command line options,
+      or through a separate configuration file that is specifed
+      at run time.  These options are designed to specify things
+      like, what type of information Argus should capture, how
+      often it should generate output records, whether it should
+      put the network interface in promiscuous mode when run,
+      should it create a pid file, etc...  The complete list is
+      described int the Argus.8 man page.
+
+
+10.2  Do I need to be root to run Argus?
+ 
+      When run as a user program, if you intend to read packets
+      from a live interface, you will need to have root privleges
+      to either open the device, or to put the interface in
+      promiscuous mode.
+
+      To have Argus read packet capture files and generate flow
+      transaction report records, no you do not need to be root.
+ 
+
+10.3  Can I have Argus start at boot time?
+
+      Most installations will want to start Argus as a daemon at
+      boot time, and the ./support/Startup/argus file is designed
+      to help support this.  This needs to be configured by a Unix
+      system administrator, using tools such as chkconfig.
+
+      See the README file in ./support/Startup for instructions for
+      doing this.
+
+
+10.4  What are some simple examples to show me how to run Argus?
+
+      To read packets from a file and to pipe the binary
+      output to standard out.
+
+         % argus -r filename -w -
+
+      To capture 64 bytes of User data for each transaction.
+
+         % argus -U 64
+
+      To specify a particular interface (eth1) for packet capture.
+
+         # argus -i eth1
+
+      To tell Argus to include the MAC addresses in each
+      network flow transaction report.
+
+         % argus -m
+
+      To assign an IP address as the probes ID.
+
+         % argus -e 128.64.1.2
+
+      To cause Argus to generate response time data network
+      flows.  This will generate more audit records per flow
+      for flows like ICMP echo request/response flows.
+
+         % argus -R
+
+      To have Argus generate status records for active network
+      flows every 0.10 seconds, which may be useful for some
+      flow analysis techniques.
+
+         % argus -S 0.10
+
+
+10.5  How do you run Argus on your systems?
+
+      argus -e `hostname` -P 561 -U128 -mRS 30
+
+
+
+Security Considerations
+
+11.1  Is there any type of access control for a remote Argus?
+
+      Argus can use two types of access control.  The first is provided
+      by tcp_wrappers() and the other is provided by SASL.
+
+      tcp_wrappers() provides a mechanism where you can specify what
+      hosts can access the Argus.  This is an excellent utility, and
+      should be a part of any system.   ./configure will find a
+      tcp_wrappers directory if one is available in the configure
+      path, so inclusion of tcp_wrappers access control in automatic.
+
+      SASL provides strong authentication and authorization when accessing
+      argi.  This is very important stuff when accessing remote real-time
+      Argus data.
+
+11.2. Where can I get tcp-wrappers()?
+
+      ftp://ftp.porcupine.org/pub/security/tcp_wrappers_7.6.tar.gz
+
+11.3. Is there any confidentiality protection for Argus data on the wire?
+
+      When you access remote real-time Argus data, there may be a need
+      to encrypt the data.  Argus data does provide a rich source of
+      information for the network administrator, but it will also provide
+      a good source of information for the would-be intruder.
+
+      On the wire confidendiality is provided by the SASL package. 
+      ./configure is designed to find SASL and enable it automatically.
+
+11.4. Where can I get SASL?
+
+      Google "SASL CMU".
+
+
+
+Argus Client Programs
+
+12.1  What is ra()?
+
+      ra (read Argus), is the principal program for reading and
+      printing Argus data.  All other ra* programs share the
+      same options and run time behavior as ra().
+
+12.2  What is racount()?
+
+      racount will read Argus data and print out an accounting of
+      the records and the data they contain.  This is a pretty
+      minimal program, but it is very handy for checking that
+      Argus and its client programs are accurate in the packet
+      and byte counts that are reported.
+
+12.3  What is rasort()?
+
+      rasort() sorts Argus data records, based on a large number
+      of sorting criteria.  The criteria are:
+         startime, lasttime, duration, srcaddr, dstaddr,
+         proto, sport, dport, stos, dtos, sttl, dttl,
+         bytes, srcbytes, dstbytes, packets, srcpackets and dstpackets.
+
+      rasort sorts based on the order of selection criteria
+      on the command line, which defines the sorting precedence.
+
+         rasort -s dstaddr -s dport -s packets -r Argus.file - tcp
+
+      This will sort the tcp based transaction records that are
+      in Argus.file based on destination address, and if
+      the addresses are equal, it will sort based on the
+      destination port number, and when both of these criteria
+      are equal, it will futher sort based on the number of
+      packets seen in the transaction.
+
+
+12.4  Where is raxml()?
+
+      Is obseleted, as all ra* programs can print out xml format using
+      the new "-M xml" command line option. 
+
+12.5  Where is ramon()?
+
+      Ramon() has also been obeleted, as all ra* programs can do what
+      ramon() did using the "-M rmon" command line option..
+
+      This option is designed to support the two primary groups of an RMON2
+      probe.  Thus the name rmon. These groups are the TopN and the
+      Matrix group.  The RMON TopN provides a table of the the top
+      "talking" IP addresses with packet and bytes counts, and the Matrix
+      group provides a table fo the top "talking" pairs of IP addresses.
+
+      See the documentation on how to do this.
+
+12.6  What is rapath?
+
+      Rapath() extracts path information from argus data files.  The idea
+      is that if argus() sees a traceroute() volley, all the information 
+      needed to generate the traceroute information is available in the
+      argus data.
+
+      See the manpage for rapath().
+
+12.7  What is racluster?
+
+      Racluster() replaces ragator() as the general argus aggregation tool.
+
+      See the manpage for racluster().
+
+
+12.10 What is ratemplate?
+
+      Ratemplate.c is a prototype template for you to write your own argus
+      client programs.
+
+
+Problems
+
+13.1 I don't think Argus is auditing all the traffic.  What could be wrong?
+
+      Argus audits all the packets that it receives.  Usually when
+      you suspect that there is traffic that Argus isn't reporting,
+      it is generally one of two situation. 
+
+         Argus is usually not seeing the packets.
+         Argus is reporting the packets in an unexpected flow.
+
+13.2 Ra doesn't seem to read Argus output properly.
+
+      Three things to try. 
+
+      First is make sure that the ra() that you are using 
+      is from argus-clients-3.0.  ra 2.x cannot read Argus-3.0
+      data.  To verify the ra() version,  run ra -h.
+
+      Second is that Argus.log may need to removed so that Argus
+      can write a clean output log.  There may be a situation where
+      Argus is writing into a Argus-2.0 data file.  The two header
+      formats are not compatible, so ra may have trouble with 
+      that.  With still Argus running just: 
+      
+         mv Argus.log testfile 
+      
+      Argus will recreate Argus.log when new data is 
+      ready to be written.  When the Argus.log reappears, 
+      then try to read from it. 
+
+      If the problem doesn't relate to upgrading from 2.0
+      to 3.0, it may be that you need to turn off name lookups
+      using the -n option.  What appears to be no output may
+      be the delay in looking up a host name, and the DNS
+      server is not responding.  Try:
+      
+         ra -nr Argus.log 
+
+     If this doesn't clear up the problem, send mail to the mailing list.
+      
+
+   
+Audit Management
+
+14.1. Can I compress Argus log files?
+      All ra* based clients can read compressed (.gz, .bz2 or .Z) Argus data files.
+      This allows you to store your Argus data files using gzip(1), bzip2(1)
+      or compress(1).
+
+      This provides in general 3-4:1 compression.
+
+      Also, all ra* based clients can read data from stdin, using the "-r -"
+      option, so you can pipe the output of uncompress utilities directly
+      into ra* programs.  This should allow for flexibility in the type
+      of compression to use.
+    
+      
+14.2. Can I process/archive the Argus output file while Argus is running?
+
+      Argus allows for removing its output file, "on the fly".  Argus will
+      recover by recreating its output file, accordingly.  This allows you
+      to "pull" the data file away from an Argus daemon for processing,
+      archiving, whatever.
+
+      The Argus package includes a sample program for managing Argus logs that
+      takes advantage of this behavior.  The very simple sh script is
+      ./support/Archive/argusarchive.  This program will simply rename
+      a well known Argus output file, sort and compress its output, and
+      then move to into a calender structured filesystem.
+
+      This is just a sample program, but it does do a pretty good job.
+
+      The idea is to have cron(8) execute this type of program on a time basis.
+
+      There is a sample crontab entry for this in the ./support/System
+      directory, that calls argusarchive every hour.
+
+
+14.3. Can you suggest a daily log reporting configuration?
+
+
+14.4. What about storing Argus logs in a database?
+

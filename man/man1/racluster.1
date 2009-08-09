@@ -1,0 +1,193 @@
+.\" Copyright (c) 2000-2008 QoSient, LLC
+.\" All rights reserved.
+.\" 
+.\" This program is free software; you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation; either version 2, or (at your option)
+.\" any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program; if not, write to the Free Software
+.\" Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+.\"
+.TH RACLUSTER 1 "07 October 2003"
+.SH NAME
+\fBracluster\fP \- aggregate \fBargus(8)\fP data files.
+.SH SYNOPSIS
+.B racluster
+[\fB\-f\fP \fIconf\fP] [\fB\-m\fP \fIagr(s)\fP] [\fB\-M\fP \fImode(s)\fP] [\fBraoptions\fP]
+.SH DESCRIPTION
+.IX  "racluster command"  ""  "\fLracluster\fP \(em argus data"
+.LP
+.B Racluster
+reads
+.BR argus
+data from an \fIargus-data\fP source, and clusters/merges the records
+based on the flow key criteria specified either on the command line, or
+in a racluster configuration file, and outputs a valid \fIargus-stream\fP.
+This tool is primarily used for data mining, data management and report
+generation.
+
+The default action is to merge status records from the same flow and
+argus probe, providing in some cases huge data reduction with
+limited loss of flow information.  Racluster provides the ability to
+modify the flow model key, either using the "-m" option, or in the
+racluster.conf file, allowing records to be clustered based on any
+number of attributes.  This supports the development of important
+reports, such as MPLS LSP usage statistics, DiffServe flow marking
+policy verification, VLAN group behavior, IP distance related
+measurements, routing loop detection, traceroute path data recovery,
+and complex availability/reachability reports, to name just a few
+useful applications.
+
+Please see racluster.5 for detailed information regarding racluster
+configuration.  
+
+.SH OPTIONS
+Racluster, like all ra based clients, supports a number of
+\fBra options\fP including filtering of input argus
+records through a terminating filter expression, and the ability
+to specify the output style, format and contents for printing
+data.  See \fBra(1)\fP for a complete description of \fBra options\fP.
+\fBracluster(1)\fP specific options are:
+.PP
+.PD 0
+.TP 4 4
+.BI \-m "\| aggregation object\^"
+Supported aggregation objects are:
+.PP
+.RS
+.TP 15
+.B none
+use a null flow key.
+.TP
+.B srcid
+argus source identifier.
+.TP
+.B smac
+source mac(ether) addr.
+.TP
+.B dmac
+destination mac(ether) addr.
+.TP
+.B smpls
+source mpls label.
+.TP
+.B dmpls
+destination label addr.
+.TP
+.B svlan
+source vlan label.
+.TP
+.B dvlan
+destination vlan addr.
+.TP
+.B saddr/[l|m]
+source IP addr/[cidr len | m.a.s.k].
+.TP
+.B daddr/[l|m]
+destination IP addr/[cidr len | m.a.s.k].
+.TP
+.B matrix/l
+sorted src and dst IP addr/cidr len.
+.TP
+.B proto
+transaction protocol.
+.TP
+.B sport
+source port number.
+.TP
+.B dport
+destination port number.
+.TP
+.B stos
+source TOS byte value.
+.TP
+.B dtos
+destination TOS byte value.
+.TP
+.B sttl
+src -> dst TTL value.
+.TP
+.B dttl
+dst -> src TTL value.
+.TP
+.B stcpb
+src -> dst TCP base sequence number.
+.TP
+.B dtcpb
+dst -> src TCP base sequence number.
+.TP
+.B inode
+intermediate node, source of ICMP mapped events.
+.TP
+.RE
+.TP 4 4
+.BI \-M "\| modes\^"
+Supported modes are:
+.PP
+.RS
+.TP 15
+.B norep
+Do not generate an aggregate statistic for each flow.  This is used
+primarily when the output represents a single object.  Primarily used
+when merging status records to generate single flows that represent
+single transactions.
+.TP
+.B rmon
+Generate data suitable for producing RMON types of metrics.
+.TP
+.B ind
+Process each input file independantly, so that after the end of
+each inputfile, racluster flushes its output.
+.TP 
+.B replace
+Replace each inputfile contents, with the aggregated output.
+.PD
+.RE
+.TP 4 4
+.BI \-V 
+Verbose operation, printing a line of output for each input file processed.
+Very useful when using the ra() -R option.
+.RE
+
+.SH INVOCATION
+A sample invocation of \fBracluster(1)\fP.  This call reads \fBargus(8)\fP data
+from \fBinputfile\fP and aggregates the IP protocol based \fBargus(8)\fP data,
+based on the source and destination address matrix and the destination port
+used by tcp flows, and report the metrics as a percent of the total.  For
+most services, this provides service specific metrics on a client/server basis.
+.TP 5
+.nf
+\fBracluster\fP -% -r inputfile -m saddr daddr dport - \\
+   tcp and syn and synack
+
+.RE
+This call reads \fBargus(8)\fP data from \fBinputfile\fP and generates the 
+path information that traceroute use would generate (assuming that traceroute
+was run during the observation period).  
+.TP 5
+.nf
+\fBracluster\fP -r inputfile -m saddr daddr sttl inode -w - - icmpmap  | \\
+   \fBrasort\fP  -m sttl -s saddr dir daddr inode avgdur spkts
+
+
+.SH COPYRIGHT
+Copyright (c) 2000-2008 QoSient. All rights reserved.
+.SH SEE ALSO
+.BR racluster(5),
+.BR ra(1),
+.BR rarc(5),
+.BR argus(8),
+.SH FILES
+
+.SH AUTHORS
+.nf
+Carter Bullard (carter@qosient.com).
+.fi
+.SH BUGS

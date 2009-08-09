@@ -1,0 +1,129 @@
+Content-type: text/html
+
+<HTML><HEAD><TITLE>Manpage of RAGREP</TITLE>
+</HEAD><BODY>
+<H1>RAGREP</H1>
+Section: User Commands  (1)<BR>Updated: 07 November 2000<BR><A HREF="#index">Index</A>
+<A HREF="http://localhost/cgi-bin/man/man2html">Return to Main Contents</A><HR>
+
+<A NAME="lbAB">&nbsp;</A>
+<H2>NAME</H2>
+
+<B>ragrep</B> - grep <B><A HREF="http://localhost/cgi-bin/man/man2html?8+argus">argus</A>(8)</B> user captured data.
+<A NAME="lbAC">&nbsp;</A>
+<H2>COPYRIGHT</H2>
+
+Copyright (c) 2000-2007 QoSient. All rights reserved.
+<A NAME="lbAD">&nbsp;</A>
+<H2>SYNOPSIS</H2>
+
+<B>ragrep</B>
+
+<B>-e</B> <I>&lt;regexp&gt;</I> [<B>-v</B>] [<B>-i</B>]
+[<B>raoptions</B>] [<B>-</B> <I>filter-expression</I>]
+<A NAME="lbAE">&nbsp;</A>
+<H2>DESCRIPTION</H2>
+
+<A NAME="ixAAB"></A>
+<P>
+
+<B>Ragrep</B>
+
+reads
+<B>argus</B>
+
+data from an <I>argus-data</I> source, greps the records based on
+the regexp specified on the command line, and outputs a valid
+<I>argus-stream</I>.
+<P>
+Ragrep works only on the fields for user captured data. Argus must be started with the configration option <B>ARGUS_CAPTURE_DATA_LEN</B> set to
+a value greater than 0, to have these data captured. See <B><A HREF="http://localhost/cgi-bin/man/man2html?5+argus.conf">argus.conf</A>(5)</B> for detail.
+<P>
+Ragrep is based on GNU <B><A HREF="http://localhost/cgi-bin/man/man2html?1+grep">grep</A>(1)</B>, so the <I>regexp</I> syntax is
+the same as for <B><A HREF="http://localhost/cgi-bin/man/man2html?1+grep">grep</A>(1)</B>. 
+<A NAME="lbAF">&nbsp;</A>
+<H2>OPTIONS</H2>
+
+Ragrep, like all ra based clients, supports a number of
+<B>ra options</B> including filtering of input argus
+records through a terminating filter expression.
+See <B><A HREF="http://localhost/cgi-bin/man/man2html?1+ra">ra</A>(1)</B> for a complete description of <B>ra options</B>.
+<B><A HREF="http://localhost/cgi-bin/man/man2html?1+ragrep">ragrep</A>(1)</B> specific options are:
+<P>
+
+
+<DL COMPACT>
+<DT><B>-e </B><I>regexp</I>
+
+<DD>
+Use the <A HREF="http://localhost/cgi-bin/man/man2html?1+grep">grep</A>(1)-compatible regular expression for filtering.
+<P>
+<DT><B>-i</B>
+
+<DD>
+ignore case.
+<P>
+<DT><B>-v</B>
+
+<DD>
+Reverse the expression matching logic.
+<P>
+<P>
+</DL>
+<A NAME="lbAG">&nbsp;</A>
+<H2>INVOCATION</H2>
+
+A sample invocation of <B><A HREF="http://localhost/cgi-bin/man/man2html?1+ragrep">ragrep</A>(1)</B>.  This call reads <B><A HREF="http://localhost/cgi-bin/man/man2html?8+argus">argus</A>(8)</B> data
+from <B>inputfile</B> and greps all http transactions that generated a &quot;404 Not Found&quot; error.
+<P>
+<DL COMPACT>
+<DT><B>ragrep</B> -r inputfile -e &quot;HTTP.*404&quot;<DD>
+<P>
+</DL>
+<A NAME="lbAH">&nbsp;</A>
+<H2>SEE ALSO</H2>
+
+<B><A HREF="http://localhost/cgi-bin/man/man2html?1+ra">ra</A>(1),</B>
+
+<B><A HREF="http://localhost/cgi-bin/man/man2html?5+rarc">rarc</A>(5),</B>
+
+<B><A HREF="http://localhost/cgi-bin/man/man2html?8+argus">argus</A>(8),</B>
+
+<P>
+<A NAME="lbAI">&nbsp;</A>
+<H2>FILES</H2>
+
+<P>
+<A NAME="lbAJ">&nbsp;</A>
+<H2>AUTHORS</H2>
+
+<PRE>
+Carter Bullard (<A HREF="mailto:carter@qosient.com">carter@qosient.com</A>).
+</PRE>
+
+<A NAME="lbAK">&nbsp;</A>
+<H2>BUGS</H2>
+
+<P>
+
+<HR>
+<A NAME="index">&nbsp;</A><H2>Index</H2>
+<DL>
+<DT><A HREF="#lbAB">NAME</A><DD>
+<DT><A HREF="#lbAC">COPYRIGHT</A><DD>
+<DT><A HREF="#lbAD">SYNOPSIS</A><DD>
+<DT><A HREF="#lbAE">DESCRIPTION</A><DD>
+<DT><A HREF="#lbAF">OPTIONS</A><DD>
+<DT><A HREF="#lbAG">INVOCATION</A><DD>
+<DT><A HREF="#lbAH">SEE ALSO</A><DD>
+<DT><A HREF="#lbAI">FILES</A><DD>
+<DT><A HREF="#lbAJ">AUTHORS</A><DD>
+<DT><A HREF="#lbAK">BUGS</A><DD>
+</DL>
+<HR>
+This document was created by
+<A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
+using the manual pages.<BR>
+Time: 13:20:15 GMT, May 16, 2007
+</BODY>
+</HTML>

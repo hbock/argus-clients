@@ -1,0 +1,194 @@
+Content-type: text/html
+
+<HTML><HEAD><TITLE>Manpage of RAHISTO</TITLE>
+</HEAD><BODY>
+<H1>RAHISTO</H1>
+Section: User Commands  (1)<BR>Updated: 07 November 2000<BR><A HREF="#index">Index</A>
+<A HREF="http://localhost/cgi-bin/man/man2html">Return to Main Contents</A><HR>
+
+<A NAME="lbAB">&nbsp;</A>
+<H2>NAME</H2>
+
+<B>rahisto</B> - print histogram of metrics from <B><A HREF="http://localhost/cgi-bin/man/man2html?8+argus">argus</A>(8)</B> data.
+<A NAME="lbAC">&nbsp;</A>
+<H2>COPYRIGHT</H2>
+
+Copyright (c) 2000-2007 QoSient. All rights reserved.
+<A NAME="lbAD">&nbsp;</A>
+<H2>SYNOPSIS</H2>
+
+<B>rahisto</B>
+
+[<B>-M</B> <I>histomode</I>] <B>-H</B> <I>bin[L]:range|size</I> ...
+[<B>raoptions</B>]
+<A NAME="lbAE">&nbsp;</A>
+<H2>DESCRIPTION</H2>
+
+<A NAME="ixAAB"></A>
+<P>
+
+<B>Rahisto</B>
+
+reads
+<B>argus</B>
+
+data from an <I>argus-data</I> source, sorts the records based on
+the criteria specified on the command line, and outputs a valid
+<I>argus-stream</I>.
+<A NAME="lbAF">&nbsp;</A>
+<H2>OPTIONS</H2>
+
+Rahisto, like all ra based clients, supports a number of
+<B>ra options</B> including filtering of input argus
+records through a terminating filter expression.
+See <B><A HREF="http://localhost/cgi-bin/man/man2html?1+ra">ra</A>(1)</B> for a complete description of <B>ra options</B>.
+<B><A HREF="http://localhost/cgi-bin/man/man2html?1+rahisto">rahisto</A>(1)</B> specific options are:
+<P>
+
+
+<DL COMPACT>
+<DT><B>-M nozero</B>
+
+<DD>
+Don't print bins that have zero frequencies.
+<DT><B>-M outlayer</B>
+
+<DD>
+Print accumulated stats for outlayer values, i.e. the values that
+are outside the histogram range.
+<P>
+<DT><B>-H</B><I> metric bin[L]:range | size</I>
+
+<DD>
+<P>
+<DT>Supported metrics are:<DD>
+</DL>
+<P>
+
+<DL COMPACT><DT><DD>
+<DL COMPACT>
+<DT><B>dur</B>
+
+<DD>
+record total duration.
+<DT><B>avgdur</B>
+
+<DD>
+record average duration.
+<DT><B>proto</B>
+
+<DD>
+transaction protocol.
+<DT><B>sport</B>
+
+<DD>
+source port number.
+<DT><B>dport</B>
+
+<DD>
+destination port number.
+<DT><B>stos</B>
+
+<DD>
+source TOS byte value.
+<DT><B>dtos</B>
+
+<DD>
+destination TOS byte value.
+<DT><B>sttl</B>
+
+<DD>
+src -&gt; dst TTL value.
+<DT><B>dttl</B>
+
+<DD>
+dst -&gt; src TTL value.
+<DT><B>[s|d]bytes</B>
+
+<DD>
+[src | dst] transaction bytes.
+<DT><B>[s|d]appbytes</B>
+
+<DD>
+[src | dst] application bytes.
+<DT><B>[s|d]pkts</B>
+
+<DD>
+dst -&gt; src packet count.
+<DT><B>[s|d]load</B>
+
+<DD>
+packets per second.
+<DT><B>[s|d]loss</B>
+
+<DD>
+pkts retransmitted or dropped.
+<DT><B>[s|d]ploss</B>
+
+<DD>
+percent pkts retransmitted or dropped.
+<DT><B>[s|d]rate</B>
+
+<DD>
+bits per second.
+
+</DL>
+</DL>
+
+<P>
+<A NAME="lbAG">&nbsp;</A>
+<H2>INVOCATION</H2>
+
+A sample invocation of <B><A HREF="http://localhost/cgi-bin/man/man2html?1+rahisto">rahisto</A>(1)</B>.  This call reads <B><A HREF="http://localhost/cgi-bin/man/man2html?8+argus">argus</A>(8)</B> data
+from <B>inputfile</B> and generates a frequency distribution histogram for
+the round-trip time of arp volleys in <B><A HREF="http://localhost/cgi-bin/man/man2html?8+argus">argus</A>(8)</B> data, between two
+hosts in a local area network, a.b.c.d and a.b.c.e. 
+<DL COMPACT>
+<DT><B>rahisto</B> -H dur 20:50-150u -r inputfile -M outlayer - arp and src pkts 1 and dst pkts 1<DD>
+</DL>
+<A NAME="lbAH">&nbsp;</A>
+<H2>SEE ALSO</H2>
+
+<B><A HREF="http://localhost/cgi-bin/man/man2html?1+ra">ra</A>(1),</B>
+
+<B><A HREF="http://localhost/cgi-bin/man/man2html?5+rarc">rarc</A>(5),</B>
+
+<B><A HREF="http://localhost/cgi-bin/man/man2html?8+argus">argus</A>(8),</B>
+
+<A NAME="lbAI">&nbsp;</A>
+<H2>FILES</H2>
+
+<P>
+<A NAME="lbAJ">&nbsp;</A>
+<H2>AUTHORS</H2>
+
+<PRE>
+Carter Bullard (<A HREF="mailto:carter@qosient.com">carter@qosient.com</A>).
+</PRE>
+
+<A NAME="lbAK">&nbsp;</A>
+<H2>BUGS</H2>
+
+<P>
+
+<HR>
+<A NAME="index">&nbsp;</A><H2>Index</H2>
+<DL>
+<DT><A HREF="#lbAB">NAME</A><DD>
+<DT><A HREF="#lbAC">COPYRIGHT</A><DD>
+<DT><A HREF="#lbAD">SYNOPSIS</A><DD>
+<DT><A HREF="#lbAE">DESCRIPTION</A><DD>
+<DT><A HREF="#lbAF">OPTIONS</A><DD>
+<DT><A HREF="#lbAG">INVOCATION</A><DD>
+<DT><A HREF="#lbAH">SEE ALSO</A><DD>
+<DT><A HREF="#lbAI">FILES</A><DD>
+<DT><A HREF="#lbAJ">AUTHORS</A><DD>
+<DT><A HREF="#lbAK">BUGS</A><DD>
+</DL>
+<HR>
+This document was created by
+<A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
+using the manual pages.<BR>
+Time: 13:20:15 GMT, May 16, 2007
+</BODY>
+</HTML>

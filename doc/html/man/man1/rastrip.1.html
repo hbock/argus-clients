@@ -1,0 +1,184 @@
+Content-type: text/html
+
+<HTML><HEAD><TITLE>Manpage of RASTRIP</TITLE>
+</HEAD><BODY>
+<H1>RASTRIP</H1>
+Section: User Commands  (1)<BR>Updated: 07 November 2000<BR><A HREF="#index">Index</A>
+<A HREF="http://localhost/cgi-bin/man/man2html">Return to Main Contents</A><HR>
+
+<A NAME="lbAB">&nbsp;</A>
+<H2>NAME</H2>
+
+<B>rastrip</B> - strip <B><A HREF="http://localhost/cgi-bin/man/man2html?8+argus">argus</A>(8)</B> data file.
+<A NAME="lbAC">&nbsp;</A>
+<H2>COPYRIGHT</H2>
+
+Copyright (c) 2000-2007 QoSient. All rights reserved.
+<A NAME="lbAD">&nbsp;</A>
+<H2>SYNOPSIS</H2>
+
+<B>rastrip</B>
+
+[<B>-M</B> [replace] [+|-]<I>dsr</I> [-M ...]]
+[<B>raoptions</B>]
+<A NAME="lbAE">&nbsp;</A>
+<H2>DESCRIPTION</H2>
+
+<A NAME="ixAAB"></A>
+<P>
+
+<B>Rastrip</B>
+
+reads
+<B>argus</B>
+
+data from an <I>argus-data</I> source, strips the records based on
+the criteria specified on the command line, and outputs a valid
+<I>argus-stream</I>. This is useful to reduce the size of argus data files.
+Rastrip always removes argus management transactions, thus having
+the same effect as a 'not man' filter expression. 
+<A NAME="lbAF">&nbsp;</A>
+<H2>OPTIONS</H2>
+
+Rastrip, like all ra based clients, supports a number of
+<B>ra options</B> including filtering of input argus
+records through a terminating filter expression.
+See <B><A HREF="http://localhost/cgi-bin/man/man2html?1+ra">ra</A>(1)</B> for a complete description of <B>ra options</B>.
+<B><A HREF="http://localhost/cgi-bin/man/man2html?1+rastrip">rastrip</A>(1)</B> specific options are:
+<P>
+
+
+<DL COMPACT>
+<DT><B>-M [replace] [+|-]dsr</B>
+
+<DD>
+Strip specified dsr (data structure record?).
+<P>
+Supported dsrs are:
+</DL>
+<P>
+
+<DL COMPACT><DT><DD>
+<DL COMPACT>
+<DT><B>flow</B>
+
+<DD>
+flow key data (proto, saddr, sport, dir, daddr, dport)
+<DT><B>time</B>
+
+<DD>
+time stamp fields (stime, ltime).
+<DT><B>metric</B>
+
+<DD>
+basic ([s|d]bytes, [s|d]pkts, [s|d]rate, [s|d]load)
+<DT><B>agr</B>
+
+<DD>
+aggregation stats (trans, avgdur, mindur, maxdur, stdev).
+<DT><B>net</B>
+
+<DD>
+network objects (tcp, esp, rtp, icmp data).
+<DT><B>vlan</B>
+
+<DD>
+VLAN tag data 
+<DT><B>mpls</B>
+
+<DD>
+MPLS label data
+<DT><B>jitter</B>
+
+<DD>
+Jitter data ([s|d]jit, [s|d]intpkt)
+<DT><B>ipattr</B>
+
+<DD>
+IP attributes ([s|d]ipid, [s|d]tos, [s|d]dsb, [s|d]ttl)
+<DT><B>suser</B>
+
+<DD>
+src user captured data bytes (suser)
+<DT><B>duser</B>
+
+<DD>
+dst captured user data bytes (duser)
+<DT><B>mac</B>
+
+<DD>
+MAC addresses (smac, dmac)
+<DT><B>icmp</B>
+
+<DD>
+ICMP specific data (icmpmap, inode)
+<DT><B>encaps</B>
+
+<DD>
+Flow encapsulation type indications
+
+</DL>
+</DL>
+
+<P>
+If no dsrs are specified, Rastrip removes the following default set of dsrs: encaps, agr, vlan, mpls, mac, icmp, ipattr, jitter, suser, duser
+<P>
+<A NAME="lbAG">&nbsp;</A>
+<H2>INVOCATION</H2>
+
+A sample invocation of <B><A HREF="http://localhost/cgi-bin/man/man2html?1+rastrip">rastrip</A>(1)</B>.  This call reads <B><A HREF="http://localhost/cgi-bin/man/man2html?8+argus">argus</A>(8)</B> data
+from <B>inputfile</B> and strips the default dsr set but keeps MAC addresses and writes the result
+to <B>outputfile</B>:
+<P>
+<B>rastrip -M +mac -r inputfile -w outputfile</B>
+<P>
+This call removes only user captured data and timings and writes the result to stdout:
+<P>
+<B>rastrip -M -suser -M -duser -M -time -r inputfile</B>
+<P>
+<A NAME="lbAH">&nbsp;</A>
+<H2>SEE ALSO</H2>
+
+<B><A HREF="http://localhost/cgi-bin/man/man2html?1+ra">ra</A>(1),</B>
+
+<B><A HREF="http://localhost/cgi-bin/man/man2html?5+rarc">rarc</A>(5),</B>
+
+<B><A HREF="http://localhost/cgi-bin/man/man2html?8+argus">argus</A>(8),</B>
+
+<A NAME="lbAI">&nbsp;</A>
+<H2>FILES</H2>
+
+<P>
+<A NAME="lbAJ">&nbsp;</A>
+<H2>AUTHORS</H2>
+
+<PRE>
+Carter Bullard (<A HREF="mailto:carter@qosient.com">carter@qosient.com</A>).
+</PRE>
+
+<A NAME="lbAK">&nbsp;</A>
+<H2>BUGS</H2>
+
+<P>
+
+<HR>
+<A NAME="index">&nbsp;</A><H2>Index</H2>
+<DL>
+<DT><A HREF="#lbAB">NAME</A><DD>
+<DT><A HREF="#lbAC">COPYRIGHT</A><DD>
+<DT><A HREF="#lbAD">SYNOPSIS</A><DD>
+<DT><A HREF="#lbAE">DESCRIPTION</A><DD>
+<DT><A HREF="#lbAF">OPTIONS</A><DD>
+<DT><A HREF="#lbAG">INVOCATION</A><DD>
+<DT><A HREF="#lbAH">SEE ALSO</A><DD>
+<DT><A HREF="#lbAI">FILES</A><DD>
+<DT><A HREF="#lbAJ">AUTHORS</A><DD>
+<DT><A HREF="#lbAK">BUGS</A><DD>
+</DL>
+<HR>
+This document was created by
+<A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
+using the manual pages.<BR>
+Time: 13:20:15 GMT, May 16, 2007
+</BODY>
+</HTML>

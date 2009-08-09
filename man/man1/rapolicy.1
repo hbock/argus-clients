@@ -1,0 +1,127 @@
+.\" Copyright (c) 2000-2008 QoSient, LLC
+.\" All rights reserved.
+.\"
+.\" This program is free software; you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation; either version 2, or (at your option)
+.\" any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program; if not, write to the Free Software
+.\" Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
+.\"
+.\"
+.\"
+.TH RAPOLICY 1 "22 July 2002"
+.SH NAME
+\fBrapolicy\fP \- compare a \fBargus(8)\fP data file/stream against a Cisco Access Control List.
+.SH COPYRIGHT
+Copyright (c) 2000-2008 QoSient. All rights reserved.
+.SH SYNOPSIS
+.B rapolicy
+.B -r
+.I argus-file 
+.I [ra options]
+.SH DESCRIPTION
+.IX  "rapolicy command"  ""  "\fLrapolicy\fP \(em argus data"
+.LP
+.B Rapolicy
+reads
+.BR argus
+data from an \fIargus-file\fP list, and tests the argus data
+stream  against a Cisco access control list configuration file,
+printing out records that represent activity that would violate
+the policy.
+.B Rapolicy
+can be used to indicate access control violations, as well as
+test new access control definitions prior to installing them
+in a router.
+.SH OPTIONS
+\fBRapolicy\fP, like all \fBra\fP based clients, supports a large
+number of options.  Options that have specific meaning to \fBrapolicy\fP
+are:
+
+.nf
+   -f <Cisco ACL file> Print records that violate the policy.
+   -D 0 (default)      Print records that violate the policy.
+   -D 1                Print records and the violated ruleset.
+   -D 2                Print all records and the ruleset that matched.
+
+See \fBra(1)\fP for a complete description of \fBra options\fP.
+.SH EXAMPLE INVOCATION
+.B rapolicy
+-r argus.file
+.nf
+.SH CISCO ACL SYNTAX
+There does not seem to be authoritative Cisco-ACL-Documentation,
+nor ACL syntax standardization.  Because Cisco has been know to
+improve its ACL rules syntax, \fBrapolicy\fP is known to work with
+Cisco ACL router defintions up to July, 2002.
+
+A Cisco ACL configuration file consists of a collection of any
+number of ACL statements, each on a separte line.  The syntax
+of an ACL statement is:
+
+.nf
+   ACL        = "access-list" ID ACTION PROTOCOL SRC DST NOTIFICATION
+   
+   ID         = Number
+   ACTION     = permit | deny
+   PROTO      = protocol name | protocol number
+   
+   SRC | DST  = ADDRESS [PORTMATCH]
+   
+   ADDRESS    = any | host HOSTADDR | HOSTADDR HOSTMASK
+   HOSTADDR   = ipV4 address
+   HOSTMASK   = matching-mask
+   
+   PORTMATCH  = PORTOP PORTNUM | range PORTRANGE
+   PORTOP     = eq | lt | gt | neq | established 
+   
+   PORTRANGE  =  PORTNUM PORTNUM
+   PORTNUM    =  TCP or UDP port value (unsigned decimal from 0 to 65535)
+
+
+.SH EXAMPLE CONFIGURATION
+This example Cisco Access Control List configuration is provided as
+an example only.  No effort has been made to verify that this example
+Access Control List enforces a useful access control policy of any
+kind.
+
+.nf
+#allow www-traffic to webserver
+access-list 102 permit tcp any 193.174.13.99 0.0.0.0 eq 80
+
+#allow ftp control connection to server
+access-list 102 permit tcp any 193.174.13.99 0.0.0.0 eq 21
+
+#allow normal ftp
+access-list 102 permit tcp any 193.174.13.99 0.0.0.0 eq 20
+
+#allow ftp passive conncetions in portrange 10000 to 10500
+access-list 102 permit tcp any host 193.174.13.99 range 10000 10500
+
+#dummy example
+access-list 102 permit tcp host 193.174.13.1 eq 12345 host 193.174.13.2 range 12345 23456
+
+#deny the rest
+access-list 102 deny tcp any any
+
+#same thing in other words:
+access-list 102 deny tcp 0.0.0.0 255.255.255.255 0.0.0.0 255.255.255.255
+.fi
+
+.SH AUTHORS
+.nf
+Carter Bullard (carter@qosient.com).
+Olaf Gellert (gellert@pca.dfn.de).
+.fi
+.SH SEE ALSO
+.BR ra (1),
+.BR rarc (5),
+.BR argus (8)

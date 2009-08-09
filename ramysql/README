@@ -1,0 +1,151 @@
+#
+#  Argus Client Software.  Tools to read, analyze and manage Ntam data.
+#  Copyright (c) 2000-2008 QoSient, LLC
+#  All rights reserved.
+#
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2, or (at your option)
+#  any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#
+#
+# Various configurable paths (remember to edit Makefile.in, not Makefile)
+#
+
+Mon Aug  4 09:04:17 EDT 2008
+Currently in performance trials with the latest incarnation.
+This program is being used as the foundation for most of the
+situational awareness backing stores.  The trial is establishing
+a series of database tables that are being updated continuously.
+
+   raisql -nnd -S apophis -M rmon -P ratop:etherHost -m srcid smac saddr \
+      -s stime dur srcid smac saddr pkts bytes -U root - ip
+
+   raisql -nnd -S apophis -P ratop:etherMatrix -m srcid macmatrix \
+      -s stime dur srcid smac dmac pkts bytes -U root
+
+
+These two databases provide most of the base information for understanding
+probes observation domain, what L2 identities are being observed, and
+the L3 addresses that are behind those L2 identities.
+
+Mon Jan 12 16:29:36 EST 2004
+ 
+raisql is turning into a very interesting program.
+when using -S 'host', it will load up a mysql table with
+data using the RADIUM_SQL_FIELDS to specify the database key.
+ 
+   raisql -f raisql.conf -S host -P projectName -n - tcp or udp
+ 
+Currently the -n and the 'tcp or udp' filter are important
+as icmp traffic does not generate a good SQL key, and it
+tries to insert icmp entries when it collides with an existing
+one, creating a "DUPLICATE ..." error in mysql().
+ 
+ 
+The ratop style cache is maintained in the database, and
+the update rate, is controlled by the update timers, ala
+ratop().
+ 
+Remote raisql() clients can access and display the exact
+same table just by specifing the raisql screen as
+a ':' separated project of interest.  In our example below,
+the raisql.conf file will generate a testTable screen in the
+test database.  The format is project:screen.
+ 
+   ../bin/raisql -P test:testTable
+ 
+#
+#  Copyright (c) 2000-2008 QoSient, LLC
+#  All rights reserved.
+#
+#  THE ACCOMPANYING PROGRAM IS PROPRIETARY SOFTWARE OF QoSIENT, LLC,
+#  AND CANNOT BE USED, DISTRIBUTED, COPIED OR MODIFIED WITHOUT
+#  EXPRESS PERMISSION OF QoSIENT, LLC.
+#
+#  QOSIENT, LLC DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS
+#  SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
+#  AND FITNESS, IN NO EVENT SHALL QOSIENT, LLC BE LIABLE FOR ANY
+#  SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+#  WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER
+#  IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
+#  ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF
+#  THIS SOFTWARE.
+#
+# RaIs Configuration File
+#
+# RaIs can provide a complex set of argus data processing
+# functions to its output.  This collection of processing
+# functions allows the radium to act as a node/component of
+# a dataflow machine.
+#
+# Radium functions are structured tasks that support:
+#    Multiprobe record correlation, where records collected
+#       from multiple ntams can be recognized as the same
+#       flow, allowing for differential metrics to be
+#       determined, such as one-way delay and loss.
+#    
+#    Input source specification, whether this function
+#       will act on all records, or the excluding records
+#       of a previous function.
+#
+#    Input filtering to select the appropriate records
+#       Records that match will be processed and records
+#       that do not match, can be discarded, or passed
+#       to other functions.
+#
+#    Classification strategies to assign semantic types.
+#       Radium supports x types of classification,
+#       such as 'service', etc ....
+#
+#    Classification specific aggregation.
+#       Each function has its own complex aggregation function
+#         all aggregates share the same classification semantic.
+#
+#
+# Function Zero, find validated services.  So we need to have
+# the first of the tcp and udp streams, but not FTP data, at
+# this point.  Assumption is that data has been processed by 
+# ragator() prior to this.
+#
+# If not complete TCP connections, or straight UDP with data, then
+# go to connectionless logic.  If is complete can user payload
+# can be validated, then output 60 second service aggregations, to
+# the service specific directory into 1hour bins.
+#
+# This should catch most/all of the TCP/UDP well formed audit records.
+#
+
+[begin function 0]
+RADIUM_TABLE="testTable"
+RADIUM_PRINT_FIELDS="ind proto saddr sport dir daddr dport pkts bytes status"
+RADIUM_SQL_FIELDS="saddr daddr proto sport dport"
+RADIUM_SORT_FIELDS="daddr saddr proto pkts"
+RADIUM_INPUT_SOURCE=all
+RADIUM_CLASSIFIER=Services(/usr/local/ntam/std.sig)
+RADIUM_AGGREGATION=yes
+RADIUM_SPLITMODE="time 1h"
+RADIUM_FILENAME="ntais/Services/$service/$daddr/%Y/%m/%d/rais.%Y.%m.%d.%H
+[begin model]
+RAGATOR_MODEL_NAME=Services Matrix
+RAGATOR_PRESERVE_FIELDS=yes
+RAGATOR_REPORT_AGGREGATION=yes
+RAGATOR_AUTO_CORRECTION=yes
+# 
+#label   id      SAddr  DAddr  Proto   SrcPort  DstPort  Model  Dur  Idle
+Flow     100 ip    *      *      *       *         *      200   60   300
+
+
+# label  id        SrcAddrMask     DstAddrMask      Proto  SrcPort  DstPort
+Model    200 ip  255.255.255.255  255.255.255.255    yes      no      yes
+[end model]
+[end function 0]

@@ -1,0 +1,103 @@
+Content-type: text/html
+
+<HTML><HEAD><TITLE>Manpage of RANONYMIZE</TITLE>
+</HEAD><BODY>
+<H1>RANONYMIZE</H1>
+Section: User Commands  (1)<BR>Updated: 04 December 2001<BR><A HREF="#index">Index</A>
+<A HREF="http://localhost/cgi-bin/man/man2html">Return to Main Contents</A><HR>
+
+<A NAME="lbAB">&nbsp;</A>
+<H2>NAME</H2>
+
+<B>ranonymize</B> - anonymize <B><A HREF="http://localhost/cgi-bin/man/man2html?8+argus">argus</A>(8)</B> data fields.
+<A NAME="lbAC">&nbsp;</A>
+<H2>COPYRIGHT</H2>
+
+Copyright (c) 2000-2007 QoSient. All rights reserved.
+<A NAME="lbAD">&nbsp;</A>
+<H2>SYNOPSIS</H2>
+
+<B>ranonymize [-f anonymize.conf</B>] [<B>raoptions</B>]
+
+<A NAME="lbAE">&nbsp;</A>
+<H2>DESCRIPTION</H2>
+
+<A NAME="ixAAB"></A>
+<P>
+
+<B>Ranonymize</B>
+
+reads
+<B>argus</B>
+
+data from an <I>argus-data</I> source, strips out fields, using the same
+strategies as <B><A HREF="http://localhost/cgi-bin/man/man2html?1+rastrip">rastrip</A>(1)</B> and anonymizes the remaining fields
+in Argus records, including the network addresses, protocol specific port
+numbers, timestamps, transaction reference numbers, TCP base sequence
+numbers, IP identifiers, and the record sequence numbers.
+<P>
+Anonymization is controlled through an anonymization configuration file.
+See <B><A HREF="http://localhost/cgi-bin/man/man2html?5+ranonymize">ranonymize</A>(5)</B> for a complete description.
+<P>
+<A NAME="lbAF">&nbsp;</A>
+<H2>OPTIONS</H2>
+
+Ranonymize, shares the same options as <B><A HREF="http://localhost/cgi-bin/man/man2html?1+rastrip">rastrip</A>(1)</B>.
+See <B><A HREF="http://localhost/cgi-bin/man/man2html?1+rastrip">rastrip</A>(1)</B> and <B><A HREF="http://localhost/cgi-bin/man/man2html?1+ra">ra</A>(1)</B> for a complete description of
+<B>ra options</B>.
+<B><A HREF="http://localhost/cgi-bin/man/man2html?1+ranonymize">ranonymize</A>(1)</B> specific options are:
+<P>
+
+
+<DL COMPACT>
+<DT><B>-f</B>
+
+<DD>
+anonymization.confile
+<P>
+</DL>
+<A NAME="lbAG">&nbsp;</A>
+<H2>SEE ALSO</H2>
+
+<B><A HREF="http://localhost/cgi-bin/man/man2html?1+ra">ra</A>(1),</B>
+
+<B><A HREF="http://localhost/cgi-bin/man/man2html?5+rarc">rarc</A>(5),</B>
+
+<B><A HREF="http://localhost/cgi-bin/man/man2html?5+ranonymize">ranonymize</A>(5),</B>
+
+<A NAME="lbAH">&nbsp;</A>
+<H2>FILES</H2>
+
+<P>
+<A NAME="lbAI">&nbsp;</A>
+<H2>AUTHORS</H2>
+
+<PRE>
+Carter Bullard (<A HREF="mailto:carter@qosient.com">carter@qosient.com</A>).
+</PRE>
+
+<A NAME="lbAJ">&nbsp;</A>
+<H2>BUGS</H2>
+
+<P>
+
+<HR>
+<A NAME="index">&nbsp;</A><H2>Index</H2>
+<DL>
+<DT><A HREF="#lbAB">NAME</A><DD>
+<DT><A HREF="#lbAC">COPYRIGHT</A><DD>
+<DT><A HREF="#lbAD">SYNOPSIS</A><DD>
+<DT><A HREF="#lbAE">DESCRIPTION</A><DD>
+<DT><A HREF="#lbAF">OPTIONS</A><DD>
+<DT><A HREF="#lbAG">SEE ALSO</A><DD>
+<DT><A HREF="#lbAH">FILES</A><DD>
+<DT><A HREF="#lbAI">AUTHORS</A><DD>
+<DT><A HREF="#lbAJ">BUGS</A><DD>
+</DL>
+<HR>
+This document was created by
+<A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
+using the manual pages.<BR>
+Time: 13:20:15 GMT, May 16, 2007
+</BODY>
+</HTML>

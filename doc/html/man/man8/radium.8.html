@@ -1,0 +1,368 @@
+Content-type: text/html
+
+<HTML><HEAD><TITLE>Manpage of RADIUM</TITLE>
+</HEAD><BODY>
+<H1>RADIUM</H1>
+Section: Maintenance Commands (8)<BR>Updated: 21 October 2001<BR><A HREF="#index">Index</A>
+<A HREF="http://localhost/cgi-bin/man/man2html">Return to Main Contents</A><HR>
+
+<A NAME="lbAB">&nbsp;</A>
+<H2>NAME</H2>
+
+radium - argus record multiplexor
+<A NAME="lbAC">&nbsp;</A>
+<H2>SYNOPSIS</H2>
+
+<B>radium</B>
+
+[
+<B>options</B>
+
+] [
+<B>filter expression</B>
+
+]
+<A NAME="lbAD">&nbsp;</A>
+<H2>COPYRIGHT</H2>
+
+Copyright (c) 2000-2007 QoSient, LLC   All rights reserved.
+<A NAME="lbAE">&nbsp;</A>
+<H2>DESCRIPTION</H2>
+
+<A NAME="ixAAB"></A>
+<A NAME="ixAAC"></A>
+<P>
+
+<B>Radium</B>
+
+is a real-time Argus Record multiplexor that processes Argus records
+which match the boolean
+<I>expression.</I>
+
+<B>Radium</B>
+
+provides the same file writing and remote access capabilities as argus,
+however radium read argus records in a fashion similar to the ra* set
+of argus clients.
+<P>
+
+Designed to run as a daemon,
+<B>radium</B>
+
+generally reads argus records directly from a remote argus, and writes the
+transaction status information to a log file or open socket connected to an
+<B>argus</B>
+
+client (such as
+<B><A HREF="http://localhost/cgi-bin/man/man2html?1+ra">ra</A>(1)</B>).
+
+<B>Radium</B>
+
+provides strong authenctication and confidentiality protection
+for its data through the use of <B>SASL</B>.  Please refer to the INSTALL
+and README files for a complete description.  In addition,
+<B>radium</B>
+
+also provides access control for its socket connection facility using
+<B>tcp_wrapper</B>
+
+technology.  Please refer to the <B>tcp_wrapper</B> distribution
+for a complete description.
+<P>
+
+<B>Radium</B>
+
+can be completely configured from a system <B>/etc/radium.conf</B> configuration file,
+or from a configuration file either in the <B>$RADIUMHOME</B> directory, or specified
+on the command line.
+<P>
+<A NAME="lbAF">&nbsp;</A>
+<H2>OPTIONS</H2>
+
+<DL COMPACT>
+<DT><B>-b</B>
+
+<DD>
+Dump the compiled packet-matching code to stdout and stop.  This is
+used to debug filter expressions.
+<DT><B>-B</B>
+
+<DD>
+&lt;addr&gt;
+Specify the bind interface address for remote access.  Acceptable values
+are IP version 4 addresses.  The default is to bind to INADDR_ANY
+address.
+<DT><B>-d</B>
+
+<DD>
+Run radium as a daemon.  This will cause radium to do the things that
+Unix daemons do and return, if there were no errors, with radium
+running as a detached process.
+<DT><B>-D</B>
+
+<DD>
+&lt;level&gt;
+Print debug messages to stderr. When compiled to support debug printing,
+the higher the <B>&lt;level&gt;</B> the more information printed.  Acceptable
+levels are 1-8.
+<DT><B>-e</B>
+
+<DD>
+&lt;value&gt;
+Specify the source identifier for this <B>radium</B>.  Acceptable values are
+numbers, hostnames or ip address.
+<DT><B>-h</B>
+
+<DD>
+Print an explanation of all the arguments.
+<DT><B>-F</B>
+
+<DD>
+Use <I>conffile</I> as a source of configuration information.
+Options set in this file override any other specification, and so 
+this is the last word on option values.
+<DT><B>-O</B>
+
+<DD>
+Turn off Berkeley Packet Filter optimizer.  No reason to do this unless
+you think the optimizer generates bad code.
+<DT><B>-p</B>
+
+<DD>
+Override the persistent connection facility.
+<B>Radium</B>
+
+provides a fault tolerant feature for its remote argus data access 
+facility.  If the remote argus data source closes, 
+<B>radium</B>
+
+will maintain its client connections, and attempt to reestablish
+its connection with remote source.  This option overrides this behavior,
+causing
+<B>radium</B>
+
+to terminate if any of its remote sources closes.
+<DT><B>-P</B>
+
+<DD>
+&lt;portnum&gt;
+Specifies the <B>&lt;portnum&gt;</B> for remote client connection.
+The default is to not support remote access.
+Setting the value to zero (0) will forceably turn off the
+facility.
+<DT><B>-r</B>
+
+<DD>
+Read from
+<B><A HREF="http://localhost/cgi-bin/man/man2html?8+argus">argus</A>(8) ,</B>
+
+data files.
+<B>Radium</B>
+
+will read from only one input data file at a time.
+If the
+<B>-r</B>
+
+option is specified,
+<B>radium</B>
+
+will not put down a
+<B><A HREF="http://localhost/cgi-bin/man/man2html?2+listen">listen</A>(2)</B>
+
+to support remote access.
+<DT><B>-S</B>
+
+<DD>
+&lt;host[:port]&gt;
+Specify a remote <I>argus-server</I> <B>&lt;host&gt;</B>.  Appending an
+port specifier is required to attach to a port different than
+the port value specified with the <B>-P</B> option, or the default.
+<DT><B>-T threshold[smh] (secs)</B>
+
+<DD>
+Indicate that <I>radium</I> should correct the timestamps of
+received <I>argus</I> records, if they are out of sync by threshold
+secconds.  Threshold can be specified with the extensions s, m, or
+h for seconds, minutes or hours.
+<DT><B>-w</B>
+
+<DD>
+&lt;file [&quot;filter&quot;]
+Write transaction status records to <I>output-file</I>.  An <I>output-file</I>
+of '-' directs <B>radium</B> to write the resulting <I>radium-file</I> output
+to <I>stdout</I>.
+<DT><B>-X</B>
+
+<DD>
+Clear existing radium configuration.  This removes any initialization done prior
+to encountering this flag.  Allows you to eliminate the effects of the
+<I>/etc/radium.conf</I> file, or any radium.conf files that may have been loaded.
+<DT><B></B><I>expression</I>
+
+<DD>
+This
+<B><A HREF="http://localhost/cgi-bin/man/man2html?1+tcpdump">tcpdump</A>(1)</B>
+
+expression
+specifies which transactions will be selected.  If no <I>expression</I>
+is given, all transactions are selected.  Otherwise,
+only transactions for which <I>expression</I> is `true' will be dumped.
+For a complete <I>expression</I> format description, please refer to the
+<B><A HREF="http://localhost/cgi-bin/man/man2html?1+tcpdump">tcpdump</A>(1)</B>
+
+man page.
+<P>
+</DL>
+<A NAME="lbAG">&nbsp;</A>
+<H2>SIGNALS</H2>
+
+<B>Radium</B> catches a number of <B><A HREF="http://localhost/cgi-bin/man/man2html?3+signal">signal</A>(3)</B> events.
+The three signals <B>SIGHUP</B>, <B>SIGINT</B>, and <B>SIGTERM</B>
+cause <B>radium</B> to exit, writing TIMEDOUT status records for
+all currently active transactions.  The signal <B>SIGUSR1</B>
+will turn on <B>debug</B> reporting, and subsequent <B>SIGUSR1</B>
+signals, will increment the <B>debug-level</B>. The signal <B>SIGUSR2</B>
+will cause <B>radium</B> to turn off all <B>debug</B> reporting.
+<P>
+<A NAME="lbAH">&nbsp;</A>
+<H2>ENVIRONMENT</H2>
+
+<PRE>
+$RADIUMHOME - Radium Root directory
+$RADIUMPATH - Radium.conf search path (/etc:$RADIUMHOME:$HOME)
+</PRE>
+
+<P>
+<A NAME="lbAI">&nbsp;</A>
+<H2>FILES</H2>
+
+<PRE>
+/etc/radium.conf         - radium daemon configuration file 
+/var/run/radium.#.#.pid  - PID file 
+</PRE>
+
+<P>
+<A NAME="lbAJ">&nbsp;</A>
+<H2>EXAMPLES</H2>
+
+<P>
+
+Run <B>radium</B> as a daemon, reading records from a remote host,
+using port 561, and writing all its transaction status reports to
+<I>output-file</I>.  This is a typical mode.
+<DL COMPACT><DT><DD>
+<PRE>
+<B>radium -S remotehost:561 -d -e `hostname` -w </B><I>output-file</I>
+</PRE>
+
+</DL>
+
+<P>
+
+Collect records from multiple argi, using port 561 on one and port
+430 on the other, and make all of these records available to other
+programs on port 562.
+<DL COMPACT><DT><DD>
+<PRE>
+<B>radium -S host1:561 -S host2:430 -de `hostname` -P 562
+</B></PRE>
+
+</DL>
+
+<P>
+
+Collect records from multiple Cisco Netflow sources, using
+the default port, and make the resulting argus records available
+on port 562.
+<DL COMPACT><DT><DD>
+<PRE>
+<B>radium -C -S host1 -S host2 -de `hostname` -P 562
+</B></PRE>
+
+</DL>
+
+<P>
+
+Radium supports both input filtering and output filtering,
+and radium supports multiple output streams, each with their
+own independant filters.
+<P>
+If you are interested in tracking IP traffic only (input
+filter) and want to report ICMP traffic in one output file,
+and all other IP traffic in another file.
+<DL COMPACT><DT><DD>
+<PRE>
+<B>radium -w </B><I>file1</I> &quot;icmp&quot; -w <I>file2</I> &quot;not icmp&quot; - ip
+</PRE>
+
+</DL>
+
+<P>
+
+Audit the network activity that is flowing between the two
+gateway routers, whose ethernet addresses are 00:08:03:2D:42:01 and
+00:00:0C:18:29:F1.  Make records available to other programs through
+port 430/tcp.
+<DL COMPACT><DT><DD>
+<PRE>
+<B>radium ether host (0:8:3:2d:42:1 and 0:0:c:18:29:f1)</B> &amp;
+</PRE>
+
+</DL>
+
+<P>
+
+Process argus records from a remote source only between 9am and 5pm every day
+and provide access to this stream on port 562.
+<DL COMPACT><DT><DD>
+<PRE>
+<B>radium -S remotehost -t 9-17 -P 562
+</B></PRE>
+
+<P>
+</DL>
+
+<A NAME="lbAK">&nbsp;</A>
+<H2>AUTHORS</H2>
+
+<PRE>
+Carter Bullard (<A HREF="mailto:carter@qosient.com">carter@qosient.com</A>)
+</PRE><A NAME="lbAL">&nbsp;</A>
+<H2>SEE ALSO</H2>
+
+<B><A HREF="http://localhost/cgi-bin/man/man2html?5+radium.conf">radium.conf</A></B>(5),
+
+<B><A HREF="http://localhost/cgi-bin/man/man2html?8+argus">argus</A></B>(8),
+
+<B><A HREF="http://localhost/cgi-bin/man/man2html?5+hosts_access">hosts_access</A></B>(5),
+
+<B><A HREF="http://localhost/cgi-bin/man/man2html?5+hosts_options">hosts_options</A></B>(5),
+
+<B><A HREF="http://localhost/cgi-bin/man/man2html?8+tcpd">tcpd</A></B>(8),
+
+<B><A HREF="http://localhost/cgi-bin/man/man2html?1+tcpdump">tcpdump</A></B>(1)
+
+<P>
+
+<HR>
+<A NAME="index">&nbsp;</A><H2>Index</H2>
+<DL>
+<DT><A HREF="#lbAB">NAME</A><DD>
+<DT><A HREF="#lbAC">SYNOPSIS</A><DD>
+<DT><A HREF="#lbAD">COPYRIGHT</A><DD>
+<DT><A HREF="#lbAE">DESCRIPTION</A><DD>
+<DT><A HREF="#lbAF">OPTIONS</A><DD>
+<DT><A HREF="#lbAG">SIGNALS</A><DD>
+<DT><A HREF="#lbAH">ENVIRONMENT</A><DD>
+<DT><A HREF="#lbAI">FILES</A><DD>
+<DT><A HREF="#lbAJ">EXAMPLES</A><DD>
+<DT><A HREF="#lbAK">AUTHORS</A><DD>
+<DT><A HREF="#lbAL">SEE ALSO</A><DD>
+</DL>
+<HR>
+This document was created by
+<A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
+using the manual pages.<BR>
+Time: 13:20:15 GMT, May 16, 2007
+</BODY>
+</HTML>

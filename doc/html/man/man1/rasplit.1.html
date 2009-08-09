@@ -1,0 +1,206 @@
+Content-type: text/html
+
+<HTML><HEAD><TITLE>Manpage of RASPLIT</TITLE>
+</HEAD><BODY>
+<H1>RASPLIT</H1>
+Section: User Commands  (1)<BR>Updated: 12 August 2003<BR><A HREF="#index">Index</A>
+<A HREF="http://localhost/cgi-bin/man/man2html">Return to Main Contents</A><HR>
+
+<A NAME="lbAB">&nbsp;</A>
+<H2>NAME</H2>
+
+<B>rasplit</B> - split <B><A HREF="http://localhost/cgi-bin/man/man2html?8+argus">argus</A>(8)</B> data.
+<A NAME="lbAC">&nbsp;</A>
+<H2>SYNOPSIS</H2>
+
+<B>rasplit</B>
+
+[[<B>-M</B> <I>splitmode</I>] [<I>splitmode options</I>]]
+[<B>raoptions</B>]
+<A NAME="lbAD">&nbsp;</A>
+<H2>DESCRIPTION</H2>
+
+<A NAME="ixAAB"></A>
+<P>
+
+<B>Rasplit</B> reads
+<B>argus</B>
+
+data from an <I>argus-data</I> source, and splits the resulting
+output into consecutive sections of records based on size, count
+time, or flow event, writing the output into a set of output-files.
+By default, <B>rasplit</B> puts 10,000 records of input into each 
+<B>argus</B> output file, or standard out.
+<P>
+The output files' name consists of a prefix, which is specified using
+the <I>-w</I> <I>ra option</I>, and a suffix, which is created for each
+resulting file.  If no prefix is provided, then <B>rasplit</B> will
+use 'x' as the default prefix.  The suffix that is used is determined
+by the mode of operation.  When <B>rasplit</B> is using the default
+count mode or the size mode, the suffix is a group of letters &quot;aa&quot;,
+&quot;ab&quot;, and so on, such that concatenating the output files in sorted
+order by file name produces the original input file.  If <B>rasplit</B>
+will need to create more output files than are allowed by the default
+suffix strategy, more letters will be added, in order to accomodate
+the needed files.  When the mode is <B>time</B> mode, the default
+output filename suffix is '%Y.%m.%d.%h.%m.%s', which is used by
+strftime() to create an output filename that is time oriented.
+This default is overrided by adding a '%' extension to the name
+provided on the commandline using the <I>-w</I> option.
+<P>
+When standard out is specified, using <I>-w -</I>, <B>rasplit</B>
+will output a single <B>argus-stream</B> with START and STOP argus management
+records inserted appropriately to indicate where the output is split.
+See <B><A HREF="http://localhost/cgi-bin/man/man2html?8+argus">argus</A>(8)</B> for more information on output stream formats.
+<P>
+When <B>rasplit</B> is spliting on output record count (the default), the
+number of records is specified as an ordinal counter, the default is
+10,000 records.  When <B>rasplit</B> is spliting based on the maximum output
+file size, the size is specified as bytes.  The scale of the bytes can be
+specified by appending 'b', 'k' and 'm' to the number provided.
+<P>
+When <B>rasplit</B> is spliting based on time, the time period is specified
+with the option, and can be any period based in seconds (s), minutes (m),
+hours (h), days (d), weeks (w), months (M) or years (y).  <B>Rasplit</B>
+will create and modify records as required to split on prescribed time
+boundaries.  If any record spans a time boundary, the record is split
+and the metrics are adjusted using a uniform distribution model to
+distribute the statistics between the two records.  Care is taken to
+avoid records with zero packet and byte counts, that could result
+from roundoff error.
+<P>
+When <B>rasplit</B> is spliting based on flow event, the flow that acts
+as the event marker is specified using a standard <B>ra</B> filter
+expression, that is bounded by quotes (&quot;).  Records that preceed the
+first flow event in the data stream are written to the specified
+output file, and then new files are generated with the flow event
+record being the first record of the new file.  This method will allow
+you to use wire events as triggers for spliting data.
+<P>
+<A NAME="lbAE">&nbsp;</A>
+<H2>RASPLIT SPECIFIC OPTIONS</H2>
+
+Rasplit, like all ra based clients, supports
+a number of <B>ra options</B> including remote data access, reading
+from multiple files and filtering of input argus records through a
+terminating filter expression. 
+<B><A HREF="http://localhost/cgi-bin/man/man2html?1+rasplit">rasplit</A>(1)</B> specific options are:
+<DL COMPACT>
+<DT><B>-a</B><I> suffix length</I>
+
+<DD>
+default is 2 characters.
+<DT><B>-M</B><I> splitmode</I>
+
+<DD>
+Supported spliting modes are:
+<PRE>
+   <B>    count &lt;num&gt;</B>
+   <B>     size &lt;size&gt;</B>
+   <B>     time &lt;period&gt;</B>
+   <B>     flow &quot;filter-expression&quot;</B>
+</PRE>
+
+<DT><B>-w</B><I> filename</I>
+
+<DD>
+<B>Rasplit</B> supports an extended <I>-w</I> option that allows for
+output record contents to be inserted into the output filename.
+Specified using '$' (dollar) notation, any printable field can be used.
+Care should be taken to honor any shell escape requirements when
+specifying on the command line.  See <B><A HREF="http://localhost/cgi-bin/man/man2html?1+ra">ra</A>(1)</B> for the list of
+printable fields.
+<P>
+Another extended feature, when using <B>time</B> mode, <B>rasplit</B>
+will process the supplied filename using <B><A HREF="http://localhost/cgi-bin/man/man2html?3+strftime">strftime</A>(3)</B>, so that
+time fields can be inserted into the resulting output filename.
+<P>
+</DL>
+<A NAME="lbAF">&nbsp;</A>
+<H2>INVOCATION</H2>
+
+This invocation reads <B><A HREF="http://localhost/cgi-bin/man/man2html?8+argus">argus</A>(8)</B> data from <B>inputfile</B> and splits
+the <B><A HREF="http://localhost/cgi-bin/man/man2html?8+argus">argus</A>(8)</B> data stream based on output file size of no greater
+than 1 Megabyte.  The resulting output files have a prefix of <I>argus.</I>
+and suffix that starts with 'aa'.  The single trailing '.' is significant.
+<PRE>
+ 
+   <B>rasplit</B> -r inputfile -M size 1m -w argus.
+ 
+</PRE>
+
+<P>
+This invocation splits <B>inputfile</B> based on hard 10 minute time boundaries.
+The resulting output files are created with a prefix of <I>/archive/%Y/%m/%d/argus.</I>
+and the suffix is <I>%H.%M.%S</I>.  The values will be supplied based on the time in
+the record being written out.
+<PRE>
+  
+   <B>rasplit</B> -r * -M time 10m -w &quot;/archive/%Y/%m/%d/argus.%H.%M.%S&quot;
+ 
+</PRE>
+
+<P>
+This invocation splits <B>inputfile</B> based on the argus source identifier.
+The resulting output files are created with a prefix of <I>/archive/Source Identifier/argus.</I>
+and the default suffix starting with  &quot;aa&quot;.  The source identifier will be
+supplied based on the contents of the record being exported.
+<PRE>
+  
+   <B>rasplit</B> -r * -M time 10m -w &quot;/archive/$srcid/argus.&quot;
+ 
+</PRE>
+
+This invocation splits <B>inputfile</B> based on a flow event marker.
+The resulting output files are created with a prefix of 'outfile.' and
+the default suffix starting with  &quot;aa&quot;.  Whenever a ping to a specific
+host is seen in the stream, a new output file is generated.
+<PRE>
+  
+   <B>rasplit</B> -r * -M flow &quot;echo and host 1.2.3.4&quot; -w outfile.
+ 
+</PRE>
+
+<A NAME="lbAG">&nbsp;</A>
+<H2>COPYRIGHT</H2>
+
+Copyright (c) 2000-2007 QoSient. All rights reserved.
+<P>
+<A NAME="lbAH">&nbsp;</A>
+<H2>SEE ALSO</H2>
+
+<B><A HREF="http://localhost/cgi-bin/man/man2html?1+ra">ra</A>(1),</B>
+
+<B><A HREF="http://localhost/cgi-bin/man/man2html?5+rarc">rarc</A>(5),</B>
+
+<B><A HREF="http://localhost/cgi-bin/man/man2html?8+argus">argus</A>(8),</B>
+
+<P>
+<A NAME="lbAI">&nbsp;</A>
+<H2>AUTHORS</H2>
+
+<PRE>
+Carter Bullard (<A HREF="mailto:carter@qosient.com">carter@qosient.com</A>).
+</PRE>
+
+<P>
+
+<HR>
+<A NAME="index">&nbsp;</A><H2>Index</H2>
+<DL>
+<DT><A HREF="#lbAB">NAME</A><DD>
+<DT><A HREF="#lbAC">SYNOPSIS</A><DD>
+<DT><A HREF="#lbAD">DESCRIPTION</A><DD>
+<DT><A HREF="#lbAE">RASPLIT SPECIFIC OPTIONS</A><DD>
+<DT><A HREF="#lbAF">INVOCATION</A><DD>
+<DT><A HREF="#lbAG">COPYRIGHT</A><DD>
+<DT><A HREF="#lbAH">SEE ALSO</A><DD>
+<DT><A HREF="#lbAI">AUTHORS</A><DD>
+</DL>
+<HR>
+This document was created by
+<A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
+using the manual pages.<BR>
+Time: 13:20:15 GMT, May 16, 2007
+</BODY>
+</HTML>

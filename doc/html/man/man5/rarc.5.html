@@ -1,0 +1,313 @@
+Content-type: text/html
+
+<HTML><HEAD><TITLE>Manpage of RARC</TITLE>
+</HEAD><BODY>
+<H1>RARC</H1>
+Section: User Commands  (1)<BR>Updated: 07 November 2000<BR><A HREF="#index">Index</A>
+<A HREF="http://localhost/cgi-bin/man/man2html">Return to Main Contents</A><HR>
+
+<A NAME="lbAB">&nbsp;</A>
+<H2>NAME</H2>
+
+<B>rarc</B> - <B>ra</B> client resource file.
+<A NAME="lbAC">&nbsp;</A>
+<H2>SYNOPSIS</H2>
+
+<B>rarc</B>
+
+<A NAME="lbAD">&nbsp;</A>
+<H2>COPYRIGHT</H2>
+
+Copyright (c) 2000-2007 QoSient. All rights reserved.
+<A NAME="lbAE">&nbsp;</A>
+<H2>DESCRIPTION</H2>
+
+Ra* clients will open this file if its in the users $HOME directory,
+or in the $ARGUSHOME directory, and parse it to set common configuration
+options.  All of these values will be overriden by options set on the
+command line, or in the file specified using the '-F conffile' option.
+<P>
+Values can be quoted to make string denotation easier, however, the
+parser does not require that string values be quoted.  To support this,
+the parse will remove &quot; (double quote) characters from input strings, so
+do not use this character in strings themselves.
+<P>
+Values specified as &quot;&quot; will be treated as a NULL string, and the parser
+will ignore the variable setting.
+<P>
+<A NAME="lbAF">&nbsp;</A>
+<H2>RA_ARGUS_SERVER</H2>
+
+All ra* clients can attach to a remote server, and collect argus data
+in real time.  This variable can be a name or a dot notation IP address.
+Optionally you can specify a port number using a ':' and then providing
+the port number desired.
+<P>
+<B>RA_ARGUS_SERVER=</B>localhost:561
+<P>
+<A NAME="lbAG">&nbsp;</A>
+<H2>RA_CISCONETFLOW_PORT</H2>
+
+<P>
+All ra* clients can read Cisco Netflow records directly from Cisco
+routers.  Specifying this value will alert the ra* client to open
+a UDP based socket listening for Cisco Netflow data on the port
+number specified.
+<P>
+<B>RA_CISCONETFLOW_PORT=</B>
+<P>
+<P>
+<A NAME="lbAH">&nbsp;</A>
+<H2>RA_OUTPUT_FILE</H2>
+
+All ra* clients can support writing output as Argus Records into
+a file or stdout.  Stdout is specified as '-'.
+<P>
+<B>RA_OUTPUT_FILE=</B>&quot;filename&quot;
+<P>
+<A NAME="lbAI">&nbsp;</A>
+<H2>RA_TIMERANGE</H2>
+
+All ra* clients can support input filtering on a time range. The
+format is:
+<PRE>
+     <B>timeSpecification[-timeSpecification]</B>
+
+where the format of a timeSpecification can be:
+     [[[yy/]mm/]dd.]hh[:mm[:ss]]
+     [yy/]mm/dd
+
+<B>RA_TIMERANGE=</B>&quot;55/12/04.00:00:01-55/12/04.23:59:59&quot;
+<B>RA_TIMERANGE=</B>&quot;12/04-12/05&quot;
+</PRE>
+
+<P>
+<P>
+<A NAME="lbAJ">&nbsp;</A>
+<H2>RA_RUN_TIME</H2>
+
+<P>
+All ra* clients can support running for a number of seconds,
+while attached to a remote source of argus data.  This is a type
+of polling.  The default is zero (0), which means run indefinately.
+<P>
+<B>RA_RUN_TIME</B>=0
+<P>
+<P>
+<A NAME="lbAK">&nbsp;</A>
+<H2>RA_PRINT_LABELS</H2>
+
+<P>
+Most ra* clients are designed to print argus records out in ASCII,
+with each client supporting its own output formats.  For ra() like
+clients, this variable will generate column headers as labels.
+The number is the number of lines between repeated header labeling.
+Setting this value to zero (0) will cause the labels to be printed
+once.  If you don't want labels,  comment this line out, delete it
+or set the value to -1.
+<P>
+<B>RA_PRINT_LABELS</B>=0
+<P>
+<P>
+<A NAME="lbAL">&nbsp;</A>
+<H2>RA_FIELD_DELIMITER</H2>
+
+<P>
+Most ra* clients are designed to print argus records out in ASCII,
+with each client supporting its own output formats.  For ra() like
+clients, this variable can overide the default field delimiter,
+which are variable spans of space (' '), to be any character.
+The most common are expected to be '	' for tabs, and ',' for
+comma separated fields.
+<P>
+<B>RA_FIELD_DELIMITER=</B>','
+<P>
+<P>
+<A NAME="lbAM">&nbsp;</A>
+<H2>RA_PRINT_NAMES</H2>
+
+<P>
+For <B><A HREF="http://localhost/cgi-bin/man/man2html?1+ra">ra</A>(1)</B> like clients, this variable will control the
+translation of various numbers to names, such as address hostnames, 
+port service names and/or protocol names.  There can be a huge
+performance impact with name lookup, so the default is to not
+resolve hostnames.
+<P>
+<B>RA_PRINT_NAMES=</B>port
+<P>
+Other valid options are none to print no names, proto
+to translate the protocol names, port to translate 
+port names, and all to translate all the fields.  An
+invalid option will default to port, silently.
+<P>
+<A NAME="lbAN">&nbsp;</A>
+<H2>RA_PRINT_RESPONSE_DATA</H2>
+
+<P>
+For ra() like clients, this variable will include the response
+data that is provided by Argus.  This is protocol and state
+specific.
+<P>
+<B>RA_PRINT_RESPONSE_DATA=</B>no
+<P>
+<A NAME="lbAO">&nbsp;</A>
+<H2>RA_PRINT_UNIX_TIME</H2>
+
+<P>
+For ra() like clients, this variable will force the timestamp
+to be in Unix time format, which is an integer representing the
+number of elapsed seconds since the epoch.
+<P>
+<B>RA_PRINT_UNIX_TIME</B>=no
+<P>
+<P>
+<A NAME="lbAP">&nbsp;</A>
+<H2>RA_TIME_FORMAT</H2>
+
+<P>
+For ra() like clients, the format that is used to print
+timestamps, is based on the strftime() library call, with
+an extension to print fractions of a sec using &quot;%f&quot;.  The
+default is &quot;%T.%f&quot;.  You can overide this default time
+format by setting this variable.  This string must conform
+to the format specified in strftime().  Malformed strings can
+generate interesting output, so be aware with this one, and
+don't forget the '.' when doing fractions of a second.
+<P>
+<B>RA_TIME_FORMAT=</B>&quot;%T.%f&quot;
+<P>
+<P>
+<A NAME="lbAQ">&nbsp;</A>
+<H2>RA_TZ</H2>
+
+<P>
+The timezone used for timestamps is specified by the
+tzset() library routines, and is normally specified by
+factors such as the TZ environment variable found on
+most machines.  You can override the TZ environment variable
+by specifying a time zone using this variable.  The format
+of this string must conform to the format specified by
+<A HREF="http://localhost/cgi-bin/man/man2html?3+tzset">tzset</A>(3).
+<P>
+<PRE>
+<B>RA_TZ=</B>&quot;EST5EDT4,M3.2.0/02,M11.1.0/02&quot;
+<B>RA_TZ=</B>&quot;PST8PDT&quot;
+</PRE>
+
+<P>
+<P>
+<A NAME="lbAR">&nbsp;</A>
+<H2>RA_USEC_PRECISION</H2>
+
+<P>
+For ra() like clients, this variable is used to override the
+time format of the timestamp.  This variable specifies the
+number of decimal places that will be printed as the fractional
+part of the time.  Argus collects usec precision, and so a
+maximum value of 6 is supported.  To not print the fractional
+part, specify the value zero (0).
+<P>
+<B>RA_USEC_PRECISION=</B>6
+<P>
+<P>
+<A NAME="lbAS">&nbsp;</A>
+<H2>RA_USERDATA_ENCODE</H2>
+
+<P>
+Argus can capture user data.  When printing out the user data
+contents, using tools such as raxml(), the type of encoding
+can be specified here. Supported values are &quot;Ascii&quot;, or &quot;Encode64&quot;.
+<P>
+<B>RA_USERDATA_ENCODE=</B>Ascii
+<P>
+<A NAME="lbAT">&nbsp;</A>
+<H2>RA_DEBUG_LEVEL</H2>
+
+<P>
+If compiled to support this option, ra* clients are capable
+of generating a lot of use [full | less | whatever] debug
+information.  The default value is zero (0).
+<P>
+<B>RA_DEBUG_LEVEL=</B>0
+<P>
+<A NAME="lbAU">&nbsp;</A>
+<H2>RA_FILTER</H2>
+
+<P>
+You can provide a filter expression here, if you like.
+It should be limited to 2K in length.  The default is to
+not filter.  See <A HREF="http://localhost/cgi-bin/man/man2html?1+ra">ra</A>(1) for the format of the filter expression.
+<P>
+<B>RA_FILTER=</B>&quot;&quot;
+<P>
+<A NAME="lbAV">&nbsp;</A>
+<H2>SASL SUPPPORT</H2>
+
+When argus is compiled with SASL support, ra* clients may be
+required to authenticate to the argus server before the argus
+will accept the connection.  This variable will allow one to
+set the user and authorization id's, if needed.  Although
+not the best practice, you can provide a password through the
+RA_AUTH_PASS variable.  If you do this, you should protect
+the contents of this file.  The format for this variable is:
+<BR>&nbsp;
+<PRE>
+<B>RA_USER_AUTH=</B>&quot;user_id/authorization_id&quot;
+<B>RA_AUTH_PASS=</B>&quot;password&quot;
+</PRE>
+
+<P>
+<P>
+The clients can specify a part of the negotiation of the
+security policy that argus uses. This is controlled through
+the use of a minimum and maximum allowable protection
+strength values.  Set these variable to control this policy.
+<P>
+<PRE>
+<B>RA_MIN_SSF=</B>0
+<B>RA_MAX_SSF=</B>128
+
+
+
+</PRE><A NAME="lbAW">&nbsp;</A>
+<H2>SEE ALSO</H2>
+
+<B><A HREF="http://localhost/cgi-bin/man/man2html?1+ra">ra</A></B>(1)
+
+<P>
+<P>
+<P>
+
+<HR>
+<A NAME="index">&nbsp;</A><H2>Index</H2>
+<DL>
+<DT><A HREF="#lbAB">NAME</A><DD>
+<DT><A HREF="#lbAC">SYNOPSIS</A><DD>
+<DT><A HREF="#lbAD">COPYRIGHT</A><DD>
+<DT><A HREF="#lbAE">DESCRIPTION</A><DD>
+<DT><A HREF="#lbAF">RA_ARGUS_SERVER</A><DD>
+<DT><A HREF="#lbAG">RA_CISCONETFLOW_PORT</A><DD>
+<DT><A HREF="#lbAH">RA_OUTPUT_FILE</A><DD>
+<DT><A HREF="#lbAI">RA_TIMERANGE</A><DD>
+<DT><A HREF="#lbAJ">RA_RUN_TIME</A><DD>
+<DT><A HREF="#lbAK">RA_PRINT_LABELS</A><DD>
+<DT><A HREF="#lbAL">RA_FIELD_DELIMITER</A><DD>
+<DT><A HREF="#lbAM">RA_PRINT_NAMES</A><DD>
+<DT><A HREF="#lbAN">RA_PRINT_RESPONSE_DATA</A><DD>
+<DT><A HREF="#lbAO">RA_PRINT_UNIX_TIME</A><DD>
+<DT><A HREF="#lbAP">RA_TIME_FORMAT</A><DD>
+<DT><A HREF="#lbAQ">RA_TZ</A><DD>
+<DT><A HREF="#lbAR">RA_USEC_PRECISION</A><DD>
+<DT><A HREF="#lbAS">RA_USERDATA_ENCODE</A><DD>
+<DT><A HREF="#lbAT">RA_DEBUG_LEVEL</A><DD>
+<DT><A HREF="#lbAU">RA_FILTER</A><DD>
+<DT><A HREF="#lbAV">SASL SUPPPORT</A><DD>
+<DT><A HREF="#lbAW">SEE ALSO</A><DD>
+</DL>
+<HR>
+This document was created by
+<A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
+using the manual pages.<BR>
+Time: 13:20:15 GMT, May 16, 2007
+</BODY>
+</HTML>

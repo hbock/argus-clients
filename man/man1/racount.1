@@ -1,0 +1,59 @@
+.\" Copyright (c) 2000-2008 QoSient, LLC
+.\" All rights reserved.
+.\" 
+.\" This program is free software; you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation; either version 2, or (at your option)
+.\" any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program; if not, write to the Free Software
+.\" Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+.\"
+.TH RACOUNT 1 "07 November 2000"
+.SH NAME
+\fBracount\fP \- count things from an \fBargus(8)\fP data file/stream.
+.SH COPYRIGHT
+Copyright (c) 2000-2008 QoSient. All rights reserved.
+.SH SYNOPSIS
+.B racount
+.B -r
+.I argus-file 
+.I [ra options]
+.SH DESCRIPTION
+.IX  "racount command"  ""  "\fLracount\fP \(em argus data"
+.LP
+.B Racount
+reads
+.BR argus
+data from an \fIargus-file\fP list, and prints out various
+counts from the data in the file.
+.LP
+.SH OPTIONS
+Racount, like all ra based clients, supports a number of
+\fBra options\fP including filtering of input argus
+records through a terminating filter expression.
+See \fBra(1)\fP for a complete description of \fBra options\fP.
+
+.SH EXAMPLE INVOCATION
+.B racount
+-r argus.file
+.nf
+racount    records       total_pkts         src_pkts         dst_pkts      total_bytes        src_bytes        dst_bytes
+    sum        279             1112              661              451           165567            94561            71006
+
+.fi
+
+.SH AUTHORS
+.nf
+Carter Bullard (carter@qosient.com).
+.fi
+.SH SEE ALSO
+.BR ra (1),
+.BR rarc (5),
+.BR argus (8)

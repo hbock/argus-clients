@@ -1,0 +1,1481 @@
+Content-type: text/html
+
+<HTML><HEAD><TITLE>Manpage of RA</TITLE>
+</HEAD><BODY>
+<H1>RA</H1>
+Section: User Commands  (1)<BR>Updated: 12 November 2000<BR><A HREF="#index">Index</A>
+<A HREF="http://localhost/cgi-bin/man/man2html">Return to Main Contents</A><HR>
+
+<A NAME="lbAB">&nbsp;</A>
+<H2>NAME</H2>
+
+<B>ra</B> - read <B><A HREF="http://localhost/cgi-bin/man/man2html?8+argus">argus</A>(8)</B> data.
+<A NAME="lbAC">&nbsp;</A>
+<H2>COPYRIGHT</H2>
+
+Copyright (c) 2000-2007 QoSient. All rights reserved.
+<A NAME="lbAD">&nbsp;</A>
+<H2>SYNOPSIS</H2>
+
+<B>ra [raoptions] [- filter-expression]</B>
+<A NAME="lbAE">&nbsp;</A>
+<H2>DESCRIPTION</H2>
+
+<A NAME="ixAAB"></A>
+<P>
+
+<B>Ra</B>
+
+reads
+<B><A HREF="http://localhost/cgi-bin/man/man2html?8+argus">argus</A>(8)</B>
+
+data from either <I>stdin</I>, an <I>argus-file</I>, or from a
+remote <I>argus-server</I>, filters the records it encounters based on
+an optional <I>filter-expression</I>  and either prints the contents of the
+<B><A HREF="http://localhost/cgi-bin/man/man2html?5+argus">argus</A>(5)</B>
+
+records that it encounters to <B>stdout</B> or appends them into an
+<B><A HREF="http://localhost/cgi-bin/man/man2html?5+argus">argus</A>(5)</B>
+
+datafile.
+<P>
+
+<A NAME="lbAF">&nbsp;</A>
+<H2>OPTIONS</H2>
+
+<DL COMPACT>
+<DT><B>-A</B>
+
+<DD>
+Print aggregate statistics for the input stream on termination.
+<DT><B>-b</B>
+
+<DD>
+Dump the compiled transaction-matching code to standard output and stop.
+This is useful for debugging filter expressions.
+<DT><B>-c</B>
+
+<DD>
+Specify a delimiter character for output columns (default is ' ').
+<DT><B>-C</B>
+
+<DD>
+Indicate that the data source is Cisco Netflow wire record format.
+<DT><B>-D &lt;level&gt;</B>
+
+<DD>
+Print debug information corresponding to <B>&lt;level&gt;</B> to stderr, if program
+compiled to support debug printing.  As the level increases, so does the
+amount of debug information
+<B><A HREF="http://localhost/cgi-bin/man/man2html?1+ra">ra</A>(1)</B>
+
+will print.  Values range from 1-8.
+<DT><B>-E &lt;file&gt;</B>
+
+<DD>
+When using a filter expression at the end of the command, this option will
+cause
+<B><A HREF="http://localhost/cgi-bin/man/man2html?1+ra">ra</A>(1)</B>
+
+to append the records that are rejected by the filter into
+<B>&lt;file&gt;</B>
+
+<DT><B>-F &lt;conffile&gt;</B>
+
+<DD>
+Use <B>&lt;conffile&gt;</B> as a source of configuration information.  The format of
+this file is identical to <B><A HREF="http://localhost/cgi-bin/man/man2html?5+rarc">rarc</A>(5)</B>.  The data read from <B>&lt;conffile&gt;</B>
+overrides any prior configuration information.
+<DT><B>-h</B>
+
+<DD>
+Print an explanation of all the arguments. 
+<DT><B>-n</B>
+
+<DD>
+Modify number to name converstion.  This flag supports 3 states, specified
+by the modulus of the number of -n flags set. The first <B>-n</B> will suppress
+address to hostname lookups.  <B>-nn</B> will suppress port number to service
+conversion and <B>-nnn</B> will suppress translation of protocol numbers to
+names.  <B>-nnnn</B> will return you to full conversion.   Because this
+indicator can be set in the .rarc file, multiple <B>-n</B> flags can be used
+to specify to a specific state of number to name conversion.
+<DT><B>-M &lt;mode [mode ...]&gt;</B>
+
+<DD>
+Provide addition mode operators.  These are generally specific to the
+individual ra* program, or a specific function. Available modes for ra()
+are:
+<P>
+<PRE>
+   poll            - successfully attach to remote data source and then exit
+   rmon            - modify data to support unidiretional RMON stat reporting
+   saslmech=&quot;mech&quot; - specify a mandatory SASL mech
+   TZ=&quot;tzset&quot;      - specify a <A HREF="http://localhost/cgi-bin/man/man2html?3+tzset">tzset</A>(3) time zone specification
+   xml             - print output in xml format.
+</PRE>
+
+<DT><B>-N &lt;num[-num]&gt;</B>
+
+<DD>
+Process <B>&lt;num&gt;</B> or the <B>&lt;num - num &gt;</B> range of input records.  These
+records must match the input filter if any filter is used.
+<DT><B>-p &lt;digits&gt;</B>
+
+<DD>
+Print <B>&lt;digits&gt;</B> number of units of precision for floating point values.
+<DT><B>-q</B>
+
+<DD>
+Run in quiet mode. Configure Ra to not print out the contents of records.
+This can be used with the -T and -a options to support aggregate activity
+without printing each input record.
+<DT><B>-r [- | &lt;file file ...&gt;]</B>
+
+<DD>
+Read data from <B>&lt;files&gt;</B> in the order presented on the
+commandline. '<B>-</B>' denotes stdin.  If you want to read a set of
+files and then, when done, read stdin, use multiple occurences of
+the <I>-r</I> option.  Ra can read <B><A HREF="http://localhost/cgi-bin/man/man2html?1+gzip">gzip</A>(1)</B>, <B><A HREF="http://localhost/cgi-bin/man/man2html?1+bzip2">bzip2</A>(1)</B> and 
+<B><A HREF="http://localhost/cgi-bin/man/man2html?1+compress">compress</A>(1)</B> compressed data files.
+<DT><B>-R &lt;dir dir ...&gt;</B>
+
+<DD>
+Recursively decend the directory and process all the regular
+files that are encountered.  The function does not decend to links, or
+directories that begin with '.'.  The feature, like the -r command,
+does not do any file type checking.
+<DT><B>-s &lt;[-][[+[#]]field[:len] ...&gt;</B>
+
+<DD>
+Specify the <B>fields</B> to print. Ra uses a default printing field list, 
+by specifying a field you can replace this list completely, or you can
+modify the existing default print list, using the optional '-' and '+[#]'
+form of the command.  The available fields to print are:
+<P>
+<PRE>
+   srcid, stime, ltime, sstime, dstime, dstime, dltime, 
+   trans, seq, flgs, dur, avgdur, stddev, mindur, maxdur,
+   saddr, daddr, proto, sport, dport, stos, dtos, sdsb, ddsb,
+   sttl, dttl, sipid, dipid, smpls, dmpls, svlan, dvlan, svid, dvid,
+   svpri, dvpri, [s|d]pkts, [s|d]bytes, [s||d]appbytes, [s|d]load,
+   [s|d]loss, [s|d]ploss, [s|d]rate, smac, dmac, dir,
+   [s|d]intpkt, [s|d]jit, state, suser, duser, swin, dwin,
+   trans, srng, drng, stcpb, dtcpb, tcprtt, inode
+
+</PRE>
+
+<P>
+
+<DL COMPACT><DT><DD>
+<DL COMPACT>
+<DT><B>srcid</B>
+
+<DD>
+argus source identifier.
+<DT><B>stime</B>
+
+<DD>
+record start time
+<DT><B>ltime</B>
+
+<DD>
+record last time.
+<DT><B>trans</B>
+
+<DD>
+aggregation record count.
+<DT><B>seq</B>
+
+<DD>
+argus sequence number.
+<DT><B>flgs</B>
+
+<DD>
+TCP flags seen in transaction.
+<DT><B>dur</B>
+
+<DD>
+record total duration.
+<DT><B>avgdur</B>
+
+<DD>
+average duration of aggregated records..
+<DT><B>stddev</B>
+
+<DD>
+standard deviation of aggregated duration times.
+<DT><B>mindur</B>
+
+<DD>
+minimum duration of aggregated records.
+<DT><B>maxdur</B>
+
+<DD>
+maximum duration of aggregated records.
+<DT><B>saddr</B>
+
+<DD>
+source IP addr.
+<DT><B>daddr</B>
+
+<DD>
+destination IP addr.
+<DT><B>proto</B>
+
+<DD>
+transaction protocol.
+<DT><B>sport</B>
+
+<DD>
+source port number.
+<DT><B>dport</B>
+
+<DD>
+destination port number.
+<DT><B>stos</B>
+
+<DD>
+source TOS byte value.
+<DT><B>dtos</B>
+
+<DD>
+destination TOS byte value.
+<DT><B>sdsb</B>
+
+<DD>
+source diff serve byte value.
+<DT><B>ddsb</B>
+
+<DD>
+destination diff serve byte value.
+<DT><B>sttl</B>
+
+<DD>
+src -&gt; dst TTL value.
+<DT><B>dttl</B>
+
+<DD>
+dst -&gt; src TTL value.
+<DT><B>sipid</B>
+
+<DD>
+source IP identifier.
+<DT><B>dipid</B>
+
+<DD>
+destination IP identifier.
+<DT><B>smpls</B>
+
+<DD>
+source MPLS identifier.
+<DT><B>dmpls</B>
+
+<DD>
+destination MPLS identifier.
+<DT><B>pkts</B>
+
+<DD>
+total transaction packet count.
+<DT><B>spkts</B>
+
+<DD>
+src -&gt; dst packet count.
+<DT><B>dpkts</B>
+
+<DD>
+dst -&gt; src packet count.
+<DT><B>bytes</B>
+
+<DD>
+total transaction bytes.
+<DT><B>sbytes</B>
+
+<DD>
+src -&gt; dst transaction bytes.
+<DT><B>dbytes</B>
+
+<DD>
+dst -&gt; src transaction bytes.
+<DT><B>appbytes</B>
+
+<DD>
+total application bytes.
+<DT><B>sappbytes</B>
+
+<DD>
+src -&gt; dst application bytes.
+<DT><B>dappbytes</B>
+
+<DD>
+dst -&gt; src application bytes.
+<DT><B>load</B>
+
+<DD>
+bits per second.
+<DT><B>sload</B>
+
+<DD>
+source bits per second.
+<DT><B>dload</B>
+
+<DD>
+destination bits per second.
+<DT><B>loss</B>
+
+<DD>
+pkts retransmitted or dropped.
+<DT><B>sloss</B>
+
+<DD>
+source pkts retransmitted or dropped.
+<DT><B>dloss</B>
+
+<DD>
+destination pkts retransmitted or dropped.
+<DT><B>ploss</B>
+
+<DD>
+percent pkts retransmitted or dropped.
+<DT><B>sploss</B>
+
+<DD>
+percent source pkts retransmitted or dropped.
+<DT><B>dploss</B>
+
+<DD>
+percent destination pkts retransmitted or dropped.
+<DT><B>rate</B>
+
+<DD>
+pkts per second.
+<DT><B>srate</B>
+
+<DD>
+source pkts per second.
+<DT><B>drate</B>
+
+<DD>
+destination pkts per second.
+<DT><B>smac</B>
+
+<DD>
+source MAC addr.
+<DT><B>dmac</B>
+
+<DD>
+destination MAC addr.
+<DT><B>dir</B>
+
+<DD>
+direction of transaction
+<DT><B>intpkt</B>
+
+<DD>
+interpacket arrival time
+<DT><B>sintpkt</B>
+
+<DD>
+source interpacket arrival time
+<DT><B>dintpkt</B>
+
+<DD>
+destination interpacket arrival time
+<DT><B>jit</B>
+
+<DD>
+jitter.
+<DT><B>sjit</B>
+
+<DD>
+source jitter.
+<DT><B>djit</B>
+
+<DD>
+destination jitter.
+<DT><B>status</B>
+
+<DD>
+transaction status
+<DT><B>suser</B>
+
+<DD>
+source user date buffer.
+<DT><B>dvlan</B>
+
+<DD>
+destination user date buffer.
+<DT><B>swin</B>
+
+<DD>
+source TCP window advertisement.
+<DT><B>dwin</B>
+
+<DD>
+destination TCP window advertisement.
+<DT><B>svlan</B>
+
+<DD>
+source VLAN identifier.
+<DT><B>dvlan</B>
+
+<DD>
+destination VLAN identifier.
+<DT><B>svid</B>
+
+<DD>
+source VLAN identifier.
+<DT><B>dvid</B>
+
+<DD>
+destination VLAN identifier.
+<DT><B>svpri</B>
+
+<DD>
+source VLAN priority.
+<DT><B>dvpri</B>
+
+<DD>
+destination VLAN priority.
+<DT><B>srng</B>
+
+<DD>
+source time range.
+<DT><B>drng</B>
+
+<DD>
+destination time range.
+<DT><B>stcpb</B>
+
+<DD>
+source TCP base sequence number
+<DT><B>dtcpb</B>
+
+<DD>
+destination TCP base sequence number
+<DT><B>tcprtt</B>
+
+<DD>
+TCP connection setup round-trip time.
+<DT><B>inode</B>
+
+<DD>
+ICMP intermediate node.
+<DT><B>offset</B>
+
+<DD>
+record byte offset in file or stream.
+
+</DL>
+</DL>
+
+<DL COMPACT><DT><DD>
+<P>
+Examles are:
+<PRE>
+   -s saddr      print only the source address.
+   -s -bytes     removes the bytes field from list.
+   -s +2srcid    adds the source identifier as the 2nd field.
+   -s spkts:18   prints src pkt count with a column width of 18.
+   -s smpls      print the local mpls label in the flow.
+</PRE>
+
+</DL>
+
+<DT><B>-S &lt;host[:portnum]&gt;</B>
+
+<DD>
+
+<BR>
+
+
+<DT>
+
+<B>-S &lt;portnum&gt;</B>
+
+<DD>Specify a source of argus data, either a remote <I>argus-server</I> <B>&lt;host&gt;</B>,
+or a local Netflow Record source. Use the optional ':portnum' to specify a port
+number other than the default; 561. If the -C flag is in use, then the host
+is the local interface address where Netflow Cisco records are transmitted.
+If absent, then it is implied that the interface address is '0.0.0.0'.
+<DT><B>-t &lt;timerange&gt;</B>
+
+<DD>
+Specify the <B>&lt;time range&gt;</B> for matching <B><A HREF="http://localhost/cgi-bin/man/man2html?5+argus">argus</A>(5)</B> records. This
+option supports a high degree of flexibility in specifing explicit and
+relative time ranges with support for time field wildcarding.
+<P>
+The syntax for the <B>&lt;time range&gt;</B> is:
+<PRE>
+[timeComparisonInd]timeSpecification[-timeSpecification]
+   timeComparisonInd: i | n | c    (default = i)
+     i  intersects match records that were active during this time period
+     n  includes   match records that start before and end after the period
+     c  contained  match records that start and end during the period
+
+   timeSpecification: [[[yyyy/]mm/]dd.]HH[:MM[:SS]]
+                        [yyyy/]mm/dd
+                        %d{ymdHMS}
+                        { + | - }%d{ymdHMS}
+
+   where '*' can be used as a wildcard.
+
+</PRE>
+
+Examples are:
+<PRE>
+   -t 14             specify the time range 2pm-3pm for today
+   -t 1999y1m23d10h  matches 10-11am on Jan, 23, 1999
+   -t 10d*h*m15s     matches recordds that intersect the 15 sec,
+                     any minute, any hour, on the 10th of this month
+   -t ****/11/23     all records in Nov 23rd, 2006, any year
+   -t 23.11:10-14    11:10:00 - 2pm on the 23rd of this month
+   -t -10m           matches 10 minutes before, to the present
+   -t -2h5m+5m       matches records that start before and end
+                     after the range starting 2 hours 5 minutes
+                     prior to the present, and lasting 5 minutes.
+
+</PRE>
+
+Time is compared using basic intersection operations.  A record
+<B>iPntersects a specified time range if there is any intersection
+between the time range of the record and the comparison time range.
+This is the default behavior.  A record i</B>ncludes the comparison
+time range if the intersection of the two ranges equals the 
+comparison time, and a record is <B>c</B>ontained when the intersection
+equals the duration of the record.  The comparison indicator is the
+first character of the range specification, without spaces.
+<P>
+Examples are:
+<PRE>
+   -t n14:10:15-14:10:19  records include these 4s.
+   -t c14:10-14:10:10     record starts and ends within these 10s.
+</PRE>
+
+<P>
+<DT><B>-T &lt;secs&gt;</B>
+
+<DD>
+Read <B><A HREF="http://localhost/cgi-bin/man/man2html?5+argus">argus</A>(5)</B> from remote server for <B>&lt;secs&gt;</B> of time.
+<DT><B>-u</B>
+
+<DD>
+Print time values using UTC time format.
+<DT><B>-w &lt;file&gt;</B>
+
+<DD>
+Append matching data to <B>&lt;file&gt;</B>, in
+<B>argus</B>
+
+file format. An <I>output-file</I> of '-' directs 
+<B>ra</B>
+
+to write the <B><A HREF="http://localhost/cgi-bin/man/man2html?5+argus">argus</A>(5)</B> records to stdout, allowing for &quot;chaining&quot;
+<B>ra*</B>
+
+style commands together.
+<DT><B>-X</B>
+
+<DD>
+Don't read the default rarc file.
+<DT><B>-z</B>
+
+<DD>
+Modify status field to represent TCP state changes. Values are
+<PRE>
+  's' - Syn Transmitted
+  'S' - Syn Acknowledged
+  'E' - TCP Established
+  'f' - Fin Transmitted  (FIN Wait State 1)
+  'F' - Fin Acknowledged (FIN Wait State 2)
+  'R' - TCP Reset
+</PRE>
+
+<DT><B>-Z &lt;s|d|b&gt;</B>
+
+<DD>
+Modify status field to reprsent actual TCP flag values. &lt;'s'rc | 'd'st | 'b'oth&gt;.
+<PRE>
+  'F' - Fin
+  'S' - Syn
+  'R' - Reset
+  'P' - Push
+  'A' - Ack
+  'U' - Urgent Pointer
+  '7' - Undefined 7th bit set
+  '8' - Undefined 8th bit set
+</PRE>
+
+</DL>
+<A NAME="lbAG">&nbsp;</A>
+<H2>FILTER EXPRESSION</H2>
+
+If arguments remain after option processing, the collection is
+interpreted as a single filter <B>expression</B>.  In order to indicate
+the end of arguments, a '-' is recommended before the filter
+expression is added to the command line.
+<P>
+The filter expression specifies which <B><A HREF="http://localhost/cgi-bin/man/man2html?5+argus">argus</A>(5)</B> records will
+be selected for processing.  If no <I>expression</I> is given, all
+records are selected, otherwise, only those records for which
+<I>expression</I> is `true' will be printed.
+<P>
+The syntax is very similar to the expression syntax for <B><A HREF="http://localhost/cgi-bin/man/man2html?1+tcpdump">tcpdump</A>(1)</B>,
+as the tcpdump compiler was the basis for the <B><A HREF="http://localhost/cgi-bin/man/man2html?5+argus">argus</A>(5)</B> filter
+expression compiler.  The semantics for <B><A HREF="http://localhost/cgi-bin/man/man2html?1+tcpdump">tcpdump</A>(1)'s</B> packet
+filter expression are different when applied to transaction record
+filtering, so there are some major differences.
+<P>
+
+The <I>expression</I> consists of one or more
+<I>primitives.</I>
+
+Primitives usually consist of an
+<I>id</I>
+
+(name or number) preceded by one or more qualifiers.  There are three
+different kinds of qualifier:
+<DL COMPACT>
+<DT><I>type</I><DD>
+qualifiers say what kind of thing the id name or number refers to.
+Possible types are
+<B>srcid,</B>
+
+<B>encaps,</B>
+
+<B>host,</B>
+
+<B>net,</B>
+
+<B>port,</B>
+
+<B>tos,</B>
+
+<B>ttl,</B>
+
+<B>ptks,</B>
+
+<B>bytes,</B>
+
+<B>appbytes,</B>
+
+<B>data,</B>
+
+<B>rate,</B>
+
+<B>load,</B>
+
+<B>loss,</B>
+
+<B>ploss,</B>
+
+<B>mid,</B>
+
+<B>vid,</B>
+
+<B>vpri,</B>
+
+and
+<B>mid.</B>
+
+<P>
+E.g., `srcid isis`, `encaps gre', `host sphynx', `net 192.168.0.0/16', `port domain', `ttl 1', 'ptks gt 2',
+
+If there is no type qualifier,
+<B>host</B>
+
+is assumed.
+<DT><I>dir</I><DD>
+qualifiers specify a particular transfer direction to and/or from
+<I>an id.</I>
+
+Possible directions are
+<B>src</B>,
+
+<B>dst</B>,
+
+<B>src or dst</B>
+
+and
+<B>src and dst</B>.
+
+E.g., `src sphynx', `dst net 192.168.0.0/24', `src or dst port ftp',
+`src and dst tos 0x0a', `src or dst vid 0x12`, `dst vpri 0x02` .
+If there is no dir qualifier,
+<B>src or dst</B>
+
+is assumed.
+<DT><I>proto</I><DD>
+qualifiers restrict the match to a particular protocol.  Possible
+values are those specified in the <B>/etc/protocols</B> system file
+and a small number of extensions, (that should be defined
+but aren't).  Specific extended values are
+<B>'ipv4'</B>,
+
+(to specify just ip version 4), in contrast to the defined proto
+<B>'ipv6'</B>.
+
+The defined proto
+<B>'ip'</B>
+
+reduces to the filter 'ipv4 or ipv6'.
+<P>
+When preceeded by <I>ether</I>, the protocol names and numbers that
+are valid are specified in ./include/ethernames.h.
+</DL>
+<P>
+
+In addition to the above, there are some special `primitive' keywords
+that don't follow the pattern:
+<B>gateway</B>,
+
+<B>multicast</B>,
+
+and
+<B>broadcast</B>.
+
+All of these are described below.
+<P>
+
+More complex filter expressions are built up by using the words
+<B>and</B>,
+
+<B>or</B>
+
+and
+<B>not</B>
+
+to combine primitives.  E.g., `host foo and not port ftp and not port ftp-data'.
+To save typing, identical qualifier lists can be omitted.  E.g.,
+`tcp dst port ftp or ftp-data or domain' is exactly the same as
+`tcp dst port ftp or tcp dst port ftp-data or tcp dst port domain'.
+<P>
+
+Allowable primitives are:
+<DL COMPACT>
+<DT><B>srcid </B><I>argusid</I><DD>
+True if the argus identifier field in the Argus record is <I>srcid</I>,
+which may be an IP address, a name or a decimal/hexidecimal number.
+<DT><B>encaps </B><I>type</I><DD>
+True if the encapsulation used by the flow in the Argus record includes
+the <I>type</I>.  The list of valid encapsulation types is:
+<PRE>
+
+
+ mpls, eth, 802q, llc, pppoe, isl, gre, ah, ipnip, ipnip6
+<DT><B>dst host </B><I>host</I><DD>True if the IP destination field in the Argus record is <I>host</I>,
+which may be either an address or a name.
+<DT><B>src host </B><I>host</I><DD>True if the IP source field in the Argus record is <I>host</I>.
+<DT><B>host </B><I>host</I><DD>True if either the IP source or destination in the Argus record is <I>host</I>.
+Any of the above host expressions can be prepended with the keywords
+<B>ip</B>, <B>arp</B>, or <B>rarp</B> as in:
+<B>ip</B> host <I>host</I>
+</PRE>
+
+
+which is equivalent to:
+
+<PRE>
+<B>ether proto ip</B> and host <I>host</I>
+</PRE>
+
+
+If <I>host</I> is a name with multiple IP addresses, each address will
+be checked for a match.
+<DT><B>ether dst </B><I>ehost</I><DD>
+True if the ethernet destination address is <I>ehost</I>.  <I>Ehost</I>
+may be either a name from /etc/ethers or a number (see
+<I><A HREF="http://localhost/cgi-bin/man/man2html?3N+ethers">ethers</A></I>(3N)
+
+for numeric format).
+<DT><B>ether src </B><I>ehost</I><DD>
+True if the ethernet source address is <I>ehost</I>.
+<DT><B>ether host </B><I>ehost</I><DD>
+True if either the ethernet source or destination address is <I>ehost</I>.
+<DT><B>gateway</B> <I>host</I><DD>
+True if the transaction used <I>host</I> as a gateway.  I.e., the ethernet
+source or destination address was <I>host</I> but neither the IP source
+nor the IP destination was <I>host</I>.  <I>Host</I> must be a name and
+must be found in both /etc/hosts and /etc/ethers.  (An equivalent
+expression is
+
+<PRE>
+<B>ether host </B><I>ehost </I><B>and not host </B><I>host</I>
+</PRE>
+
+
+which can be used with either names or numbers for <I>host / ehost</I>.)
+<DT><B>dst net </B><I>cidr</I><DD>
+True if the IP destination address in the Argus record matches the
+<I>cidr</I> address.
+<DT><B>src net </B><I>cidr</I><DD>
+True if the IP source address in the Argus record matches the <I>cidr</I>
+address.
+<DT><B>net </B><I>cidr</I><DD>
+True if either the IP source or destination address in the Argus record matches 
+<I>cidr</I> address.
+<DT><B>dst port </B><I>port</I><DD>
+True if the network transaction is ip/tcp or ip/udp and has a
+destination port value of <I>port</I>.
+The <I>port</I> can be a number or a name used in /etc/services (see
+<I><A HREF="http://localhost/cgi-bin/man/man2html?4P+tcp">tcp</A></I>(4P)
+
+and
+<I><A HREF="http://localhost/cgi-bin/man/man2html?4P+udp">udp</A></I>(4P)).
+
+If a name is used, both the port
+number and protocol are checked.  If a number or ambiguous name is used,
+only the port number is checked (e.g., <B>dst port 513</B> will print both
+tcp/login traffic and udp/who traffic, and <B>port domain</B> will print
+both tcp/domain and udp/domain traffic).
+<DT><B>src port </B><I>port</I><DD>
+True if the network transaction has a source port value of <I>port</I>.
+<DT><B>port </B><I>port</I><DD>
+True if either the source or destination port in the Argus record is <I>port</I>.
+Any of the above port expressions can be prepended with the keywords,
+<B>tcp</B> or <B>udp</B>, as in:
+
+<PRE>
+<B>tcp src port </B><I>port</I>
+</PRE>
+
+
+which matches only tcp connections.
+<DT><B>ip proto </B><I>protocol</I><DD>
+True if the Argus record is an ip transaction (see
+<I><A HREF="http://localhost/cgi-bin/man/man2html?4P+ip">ip</A></I>(4P))
+
+of protocol type <I>protocol</I>.
+<I>Protocol</I> can be a number or any of the string values found
+in <I>/etc/protocols</I>.
+<DT><B>multicast</B><DD>
+True if the network transaction involved an ip multicast address.
+By specifing ether multicast, you can select argus records that
+involve an ethernet multicast address.
+<DT><B>broadcast</B><DD>
+True if the network transaction involved an ip broadcast address.
+By specifing ether broadcast, you can select argus records that
+involve an ethernet broadcast address.
+<DT><B>ether proto </B><I>protocol</I><DD>
+True if the Argus record is of ether type <I>protocol</I>.
+<I>Protocol</I> can be a number or a name like
+<I>ip</I>, <I>arp</I>, or <I>rarp</I>.
+<DT><B>[src | dst] ttl [gt | gte | lt | lte | eq] </B><I>number</I><DD>
+True if the TTL in the Argus record equals <I>number</I>.
+<DT><B>[src | dst] tos [gt | gte | lt | lte | eq] </B><I>number</I><DD>
+True if the TOS in the Argus record (default) equals <I>number</I>.
+<DT><B>[src | dst] vid [gt | gte | lt | lte | eq] </B><I>number</I><DD>
+True if th VLAN id in the Argus record (default) equals <I>number</I>.
+<DT><B>[src | dst] vpri [gt | gte | lt | lte | eq] </B><I>number</I><DD>
+True if the VLAN priority in the Argus record (default) equals <I>number</I>.
+<DT><B>[src | dst] mid [gt | gte | lt | lte | eq] </B><I>number</I><DD>
+True if the MPLS Label in the Argus record (default) equals <I>number</I>.
+<DT><B>[src | dst] pkts [gt | gte | lt | lte | eq] </B><I>number</I><DD>
+True if the packet count in the Argus record (default) equals <I>number</I>.
+<DT><B>[src | dst] bytes [gt | gte | lt | lte | eq] </B><I>number</I><DD>
+True if the byte count in the Argus record (default) equals <I>number</I>.
+<DT><B>[src | dst] appbytes [gt | gte | lt | lte | eq] </B><I>number</I><DD>
+True if the application byte count in the Argus record (default) equals <I>number</I>.
+<DT><B>[src | dst] rate [gt | gte | lt | lte | eq] </B><I>number</I><DD>
+True if the rate in the Argus record (default) equals <I>number</I>.
+<DT><B>[src | dst] load [gt | gte | lt | lte | eq] </B><I>number</I><DD>
+True if the load in the Argus record (default) equals <I>number</I>.
+<P>
+</DL>
+<P>
+
+Ra filter expressions support primitives that are specific
+to flow states and can be used to select flow records that
+were in these states at the time they were generated.
+<I>normal</I>,
+<I>wait</I>,
+<I>timeout</I>,
+<I>est</I> or <I>con</I>
+<P>
+Primitives that select flows that experienced fragmentation.
+<I>frag</I> and
+<I>fragonly</I>
+<P>
+Support for selecting flows that used multiple pairs of MAC
+addresses during their lifetime.
+<I>multipath</I>
+<P>
+<P>
+
+Primitives specific to TCP flows are supported.
+<I>syn</I>,
+<I>synack</I>,
+<I>ecn</I>,
+<I>fin</I>,
+<I>finack</I>,
+<I>reset</I>,
+<I>retrans</I>,
+<I>outoforder</I> and
+<I>winshut</I>
+<P>
+Primitives specific to ICMP flows are supported.
+<I>echo</I>,
+<I>unreach</I>,
+<I>redirect</I> and
+<I>timexed</I>
+<P>
+<P>
+
+For some primitives, a direction qualifier is appropriate.
+These are
+<I>frag</I>,
+<I>reset</I>,
+<I>retrans</I>,
+<I>outoforder</I> and
+<I>winshut</I>
+<P>
+<P>
+
+Primitives may be combined using:
+<DL COMPACT>
+<DT><DD>
+A parenthesized group of primitives and operators
+(parentheses are special to the Shell and must be escaped).
+<DT><DD>
+Negation (`<B>!</B>' or `<B>not</B>').
+<DT><DD>
+Concatenation (`<B>and</B>').
+<DT><DD>
+Alternation (`<B>or</B>').
+</DL>
+<P>
+
+Negation has highest precedence.
+Alternation and concatenation have equal precedence and associate
+left to right.  Note that explicit <B>and</B> tokens, not juxtaposition,
+are now required for concatenation.
+<P>
+
+If an identifier is given without a keyword, the most recent keyword
+is assumed.
+For example,
+
+<PRE>
+<B>not host sphynx and anubis</B>
+</PRE>
+
+
+is short for
+
+<PRE>
+<B>not host sphynx and host anubis</B>
+</PRE>
+
+
+which should not be confused with
+
+<PRE>
+<B>not ( host sphynx or anubis )</B>
+</PRE>
+
+
+<P>
+
+Expression arguments can be passed to <B><A HREF="http://localhost/cgi-bin/man/man2html?1+ra">ra</A>(1)</B> as either a single argument
+or as multiple arguments, whichever is more convenient.
+Generally, if the expression contains Shell metacharacters, it is
+easier to pass it as a single, quoted argument.
+Multiple arguments are concatenated with spaces before being parsed.
+<P>
+<A NAME="lbAH">&nbsp;</A>
+<H3>Startup Processing</H3>
+
+<B>Ra</B> begins by searching for the configuration file <B>.rarc</B> first
+in the directory, <B>$ARGUSHOME</B> and then <B>$HOME</B>.  If a <B>.rarc</B>
+is found, all variables specified in the file are set.
+<P>
+
+<B>Ra</B> then parses its command line options and set its internal variables
+accordingly.
+<P>
+
+If a configuration file is specified on the command-line, using the &quot;-f &lt;confile&gt;&quot;
+option, the values in this .rarc formatted file superceed all other values.
+<P>
+<P>
+<A NAME="lbAI">&nbsp;</A>
+<H2>EXAMPLES</H2>
+
+<P>
+
+To report all TCP transactions from and to host 'narly.wave.com',
+reading transaction data from <I>argus-file</I> argus.data:
+<DL COMPACT><DT><DD>
+<PRE>
+<B>ra -r argus.data - tcp and host narly.wave.com</B>
+</PRE>
+
+</DL>
+
+<P>
+
+Create the <I>argus-file</I> icmp.log with all ICMP events involving
+the host nimrod, using data from <I>argus-file</I>, but reading the
+transaction data from <I>stdin</I>:
+<DL COMPACT><DT><DD>
+<PRE>
+<B>cat </B><I>argus-file</I> | ra -r - -w icmp.log - icmp and host nimrod
+</PRE>
+
+</DL>
+
+<BR>
+
+<A NAME="lbAJ">&nbsp;</A>
+<H2>OUTPUT FORMAT</H2>
+
+<P>
+
+The following is a brief description of the output format of
+<B>ra</B>
+
+which reports transaction data in various levels of detail.
+The general format is:
+
+<DL COMPACT><DT><DD>
+<PRE>
+
+<I>  time proto  srchost  dir  dsthost  [count] state</I>
+
+</PRE>
+
+</DL>
+
+<DL COMPACT>
+<DT><B>time</B>
+
+<DD>
+The format of the <I>time</I> field is specified by the .rarc file, using
+syntax supported by the routine
+<B><A HREF="http://localhost/cgi-bin/man/man2html?3V+strftime">strftime</A>(3V).</B>
+
+The default is '%T'.
+<B>Argus</B>
+
+transactional data contains both starting and ending transaction times,
+with precision to the microsecond. However,
+<B>ra</B>
+
+by default prints out the 'stime' field, the records starting time.
+<DT><B>mac.addr</B>
+
+<DD>
+<I>mac.addr</I>
+is an optional field, specified using the
+<B>-m</B>
+
+flag.  <I>mac.addr</I> represents the first source and destination
+MAC addresses seen for a particular transaction.  These addresses are
+paired with the <I>host.port</I> fields, so the direction indicator is
+needed to distinguish between the source and destination MAC addresses.
+<DT><B>proto&nbsp;[options&nbsp;protocol]</B>
+
+<DD>
+The <I>proto</I> indicator consists of two fields. The first is
+protocol specific and the designations are:
+<PRE>
+
+
+ T        -  Time Corrected/Adjusted
+  *       -  Multiple sub-IP encapsulations
+  m       -  MPLS encapsulated flow
+  e       -  Ethernet encapsulated flow
+  l       -  LLC encapsulated flow
+  v       -  802.11Q encapsulations/tags
+  p       -  PPP over Enternet encapsulated flow
+  i       -  ISL encapsulated flow
+  G       -  GRE encapsulation
+  A       -  AH encapsulation
+  P       -  IP tunnel encapsulation
+  6       -  IPv6 tunnel encapsulation
+   I      -  ICMP events mapped to this flow
+   U      -  ICMP Unreachable event mapped to this flow
+   R      -  ICMP Redirect event mapped to this flow
+   T      -  ICMP Time Exceeded mapped to this flow
+    *     -  Both Src and Dst loss/retransmission
+    s     -  Src loss/retransmissions
+    d     -  Dst loss/retransmissions
+    &amp;     -  Both Src and Dst packet out of order
+    i     -  Src packets out of order
+    r     -  Dst packets out of order
+     @    -  Both Src and Dst Window Closure
+     S    -  Src TCP Window Closure
+     D    -  Dst TCP Window Closure
+      E   -  Both Src and Dst ECN
+      x   -  Src Explicit Congestion Notification
+      t   -  Dst ECN
+       V  -  Fragment overlap seen
+       f  -  Partial Fragment
+       F  -  Fragments seen
+        O  -  multiple IP options set
+        S  -  IP option Strict Source Route
+        L  -  IP option Loose Source Route
+        T  -  IP option Time Stamp
+        +  -  IP option Security
+        R  -  IP option Record Route
+        A  -  IP option Router Alert
+        U  -  unknown IP options set
+</PRE>
+
+<P>
+The second field indicates the upper protocol used in the transaction.
+This field will contain the first 4 characters of the official
+name for the protocol used, as defined in RFC-1700.  Argus attempts
+to discovery the Realtime Transport Protocol, when it is being used.
+When it encounters RTP, it will indicate its use in this field, with
+the string 'rtp'.  Use of the
+<B>-n</B>
+
+option, twice (-nn), will cause the actual protocol number to be
+displayed.
+<DT><B>host</B>
+
+<DD>
+The <I>host</I> field is protocol dependent, and for all protocols
+will contain the IP address/name.  For TCP and UDP, the field will
+also contain the port number/name, separated by a period.
+<DT><B>dir</B>
+
+<DD>
+The <I>dir</I> field will have the direction of the transaction,
+as can be best determined from the datum, and is used to indicate
+which hosts are transmitting. For TCP, the dir field indicates
+the actual source of the TCP connection, and the center character
+indicating the state of the transaction.
+<DL COMPACT><DT><DD>
+<PRE>
+
+     -  - transaction was NORMAL
+     |  - transaction was RESET
+     o  - transaction TIMED OUT.
+     ?  - direction of transaction is unknown.
+</PRE>
+
+</DL>
+
+<DT><B>count</B>
+
+<DD>
+<I>count</I> is an optional field, specified using the
+<B>-c</B>
+
+option.  There are 4 fields that are produced.  The
+first 2 are the packet counts and the last 2 are the byte counts
+for the specific transaction.  The fields are paired with the
+previous host fields, and represent the packets transmitted by
+the respective host.
+<DT><B>state</B>
+
+<DD>
+The <I>state</I> field indicates the principle state for the transaction
+report, and is protocol dependent.  For all the protocols, except ICMP,
+this field reports on the basic state of a transaction.
+<DT>
+<DD>
+<B>REQ|INT (requested|initial)</B>
+
+This indicates that this is the <I>initial</I> state report for a
+transaction and is seen only when the <I>argus-server</I> is in DETAIL
+mode.  For TCP connections this is <B>REQ</B>, indicating that a
+connection is being requested.  For the connectionless protocols,
+such as UDP, this is <B>INT</B>.
+<DT>
+<DD>
+<B>ACC (accepted)</B>
+
+This indicates that a request/response condition has occurred,
+and that a transaction has been detected between two hosts.
+For TCP, this indicates that a connection request has been
+answered, and the connection will be accepted.  This is only seen
+when the <I>argus-server</I> is in DETAIL mode.  For the
+connectionless protocols, this state indicates that there
+has been a single packet exchange between two hosts, and could
+qualify as a request/response transaction.
+<DT>
+<DD>
+<B>EST|CON (established|connected)</B>
+
+This record type indicates that the reported transaction is active, and
+has been established or is continuing.  This should be interpreted as a
+state report of a currently active transaction.
+For TCP, the EST state is only seen in DETAIL mode, and indicates
+that the three way handshake has been completed for a connection.
+<DT>
+<DD>
+<B>CLO (closed) </B>
+
+TCP specific, this record type indicates that the TCP connection has
+closed normally.
+<DT>
+<DD>
+<B>TIM (timeout)</B>
+
+Activity was not seen relating to this transaction, during the
+<B>argus</B>
+
+server's timeout period for this protocol.  This state is seen
+only when there were packets recorded since the last report for
+this transaction.
+<P>
+</DL>
+<P>
+
+For the ICMP and ICMPv6 protocols, the <I>state</I> field displays
+specific aspects of the ICMP type.  ICMP state can have the values:
+<PRE>
+
+<B>ECO</B>     Echo Request
+<B>ECR</B>     Echo Reply
+<B>SRC</B>     Source Quench
+<B>RED</B>     Redirect
+<B>RTA</B>     Router Advertisement
+<B>RTS</B>     Router Solicitation
+<B>TXD</B>     Time Exceeded
+<B>PAR</B>     Parameter Problem
+<B>TST</B>     Time Stamp Request
+<B>TSR</B>     Time Stamp Reply
+<B>IRQ</B>     Information Request
+<B>IRR</B>     Information Reply
+<B>MAS</B>     Mask Request
+<B>MSR</B>     Mask Reply
+<B>URN</B>     Unreachable network
+<B>URH</B>     Unreachable host
+<B>URP</B>     Unreachable port
+<B>URF</B>     Unreachable need fragmentation
+<B>URS</B>     Unreachable source failed
+<B>URNU</B>    Unreachable dst network unknown
+<B>URHU</B>    Unreachable dst host unknown
+<B>URISO</B>   Unreachable source host isolated
+<B>URNPRO</B>  Unreachable network administrative prohibited
+<B>URHPRO</B>  Unreachable host administrative prohibited
+<B>URNTOS</B>  Unreachable network TOS prohibited
+<B>URHTOS</B>  Unreachable host TOS prohibited
+<B>URFIL</B>   Unreachable administrative filter
+<B>URPRE</B>   Unreachable precedence violation
+<B>URCUT</B>   Unreachable precedence cutoff
+
+<B>MRQ</B>     Membership Query
+<B>MHR</B>     Membership Report
+<B>NDS</B>     Neighbor Discovery Router Solicit
+<B>NDA</B>     Neighbor Discovery Router Advertisement
+<B>NDN</B>     Neighbor Discovery Neighbor Solicit
+<B>NDR</B>     Neighbor Discovery Neighbor Advertisement
+<B>PTB</B>     Packet Too Big
+</PRE>
+
+<P>
+<P>
+
+<BR>
+
+<A NAME="lbAK">&nbsp;</A>
+<H2>OUTPUT EXAMPLES</H2>
+
+<P>
+These examples show typical <B>ra</B> output, and demonstrates a
+number of variations seen in <B>argus</B> data.  This <B>ra</B>
+output was generated using the <B>-n</B> option to suppress
+number translation.
+<P>
+
+
+<B>
+</B><PRE>
+Thu 12/29 06:40:32   S tcp  132.3.31.15.6439   -&gt; 12.23.14.77.23   CLO
+</PRE>
+
+
+
+
+This is a normal tcp transaction to the telnet port on host 12.23.14.77.
+The IP Option strict source route was seen.
+<P>
+
+
+<B>
+</B><PRE>
+Thu 12/29 06:40:32     tcp  132.3.31.15.6200  &lt;|  12.23.14.77.25   RST
+</PRE>
+
+
+
+
+This tcp transaction from the smtp port of host 12.23.14.77
+was <B>RESET</B>.  In many cases this indicates that the transaction was
+rejected, however some os's will use RST to close an active TCP.  Use
+either the -z or -Zb options to specify exactly what conditions existed
+during the connection.
+<P>
+
+
+<B>
+</B><PRE>
+Thu 12/29 03:39:05  M  igmp 12.88.14.10       &lt;-&gt; 128.2.2.10       CON
+</PRE>
+
+
+
+
+This is an igmp transaction state report, usually seen with MBONE traffic.
+There was more than one source and destination MAC address pair used to
+support the transaction, suggesting a possible routing loop.
+<P>
+
+
+<B>
+</B><PRE>
+Thu 12/29 06:40:05 *   tcp  12.23.14.23.1043  &lt;-&gt; 12.23.14.27.6000 TIM
+</PRE>
+
+
+
+
+
+This is an X-windows transaction, that has <B>TIMEDOUT</B>.   Packets
+were retransmitted during the connection.
+<P>
+
+
+<B>
+</B><PRE>
+Thu 12/29 07:42:09     udp   12.9.1.115.2262   -&gt; 28.12.141.6.139  INT
+</PRE>
+
+
+
+
+This is an initial netbios UDP transaction state report, indicating
+that this is the first datagram encountered for this transaction. 
+<P>
+
+
+<B>
+</B><PRE>
+Thu 12/29 06:42:09     icmp  12.9.1.115       &lt;-&gt; 12.68.5.127      ECO
+</PRE>
+
+
+
+
+This example represents a &quot;ping&quot; of host 12.9.1.115, and its response. 
+
+
+<P>
+
+
+
+This next example shows the <B>ra</B> output of a complete TCP transaction,
+with the preceeding Arp and DNS requests, while reading from a remote
+<I>argus-server</I>.   The '*' in the CLO report indicates that at least
+one TCP packet was retransmitted during the transaction.  The hostnames
+in this example are ficticious.
+<P>
+<PRE>
+% ra -S <I>argus-server</I> and host i.qosient.com
+ra: Trying argus-server port 561
+ra: connected Argus Version 3.0
+Sat 12/03 15:29:38     arp  i.qosient.com     who-has  dsn.qosient.com  INT
+Sat 12/03 15:29:39     udp  i.qosient.com.1542  &lt;-&gt;    dns.qosient.53   INT
+Sat 12/03 15:29:39     arp  i.qosient.com     who-has  qosient.com      INT
+Sat 12/03 15:29:39 *   tcp  i.qosient.com.1543   -&gt;    qosient.com.smtp CLO
+</PRE>
+
+<BR>
+
+<A NAME="lbAL">&nbsp;</A>
+<H2>AUTHORS</H2>
+
+<PRE>
+Carter Bullard (<A HREF="mailto:carter@qosient.com">carter@qosient.com</A>).
+</PRE>
+
+<A NAME="lbAM">&nbsp;</A>
+<H2>FILES</H2>
+
+<B>/etc/ra.conf</B>
+
+<A NAME="lbAN">&nbsp;</A>
+<H2>SEE ALSO</H2>
+
+<B><A HREF="http://localhost/cgi-bin/man/man2html?8+argus">argus</A></B>(8)
+
+<B><A HREF="http://localhost/cgi-bin/man/man2html?1+tcpdump">tcpdump</A></B>(1),
+
+<P>
+
+Postel, Jon,
+<I>Internet Protocol,</I>
+
+<FONT SIZE="-1">RFC</FONT>
+791,
+Network Information Center,
+<FONT SIZE="-1">SRI</FONT>
+International, Menlo Park, Calif.,
+May 1981.
+<P>
+
+Postel, Jon, 
+<I>Internet Control Message Protocol</I>,
+
+<FONT SIZE="-1">RFC</FONT>
+792,
+Network Information Center, SRI International, Menlo Park, Calif.,
+May 1981.
+<P>
+
+Postel, Jon, 
+<I>Transmission Control Protocol</I>,
+
+<FONT SIZE="-1">RFC</FONT>
+793,
+Network Information Center, SRI International, Menlo Park, Calif.,
+May 1981.
+<P>
+
+Postel, Jon,
+<I>User Datagram Protocol</I>,
+
+<FONT SIZE="-1">RFC</FONT>
+768,
+Network Information Center, SRI International, Menlo Park, Calif.,
+May 1980.
+<P>
+
+McCanne, Steven, and Van Jacobson,
+<I>The BSD Packet Filter: A New Architecture for User-level Capture</I>,
+
+Lawrwnce Berkeley Laboratory, One Cyclotron Road, Berkeley, Calif., 94720,
+December 1992.
+<P>
+
+<HR>
+<A NAME="index">&nbsp;</A><H2>Index</H2>
+<DL>
+<DT><A HREF="#lbAB">NAME</A><DD>
+<DT><A HREF="#lbAC">COPYRIGHT</A><DD>
+<DT><A HREF="#lbAD">SYNOPSIS</A><DD>
+<DT><A HREF="#lbAE">DESCRIPTION</A><DD>
+<DT><A HREF="#lbAF">OPTIONS</A><DD>
+<DT><A HREF="#lbAG">FILTER EXPRESSION</A><DD>
+<DL>
+<DT><A HREF="#lbAH">Startup Processing</A><DD>
+</DL>
+<DT><A HREF="#lbAI">EXAMPLES</A><DD>
+<DT><A HREF="#lbAJ">OUTPUT FORMAT</A><DD>
+<DT><A HREF="#lbAK">OUTPUT EXAMPLES</A><DD>
+<DT><A HREF="#lbAL">AUTHORS</A><DD>
+<DT><A HREF="#lbAM">FILES</A><DD>
+<DT><A HREF="#lbAN">SEE ALSO</A><DD>
+</DL>
+<HR>
+This document was created by
+<A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
+using the manual pages.<BR>
+Time: 13:20:15 GMT, May 16, 2007
+</BODY>
+</HTML>

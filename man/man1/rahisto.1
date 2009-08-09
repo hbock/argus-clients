@@ -1,0 +1,127 @@
+.\" Copyright (c) 2000-2008 QoSient, LLC
+.\" All rights reserved.
+.\" 
+.\" This program is free software; you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation; either version 2, or (at your option)
+.\" any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program; if not, write to the Free Software
+.\" Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+.\"
+.TH RAHISTO 1 "07 November 2000"
+.SH NAME
+\fBrahisto\fP \- print histogram of metrics from \fBargus(8)\fP data.
+.SH COPYRIGHT
+Copyright (c) 2000-2008 QoSient. All rights reserved.
+.SH SYNOPSIS
+.B rahisto
+[\fB\-M\fP \fIhistomode\fP] \fB\-H\fP \fIbin[L]:range|size\fP ...
+[\fBraoptions\fP]
+.SH DESCRIPTION
+.IX  "rahisto command"  ""  "\fLrahisto\fP \(em argus data"
+.LP
+.B Rahisto
+reads
+.BR argus
+data from an \fIargus-data\fP source, sorts the records based on
+the criteria specified on the command line, and outputs a valid
+\fIargus-stream\fP.
+.SH OPTIONS
+Rahisto, like all ra based clients, supports a number of
+\fBra options\fP including filtering of input argus
+records through a terminating filter expression.
+See \fBra(1)\fP for a complete description of \fBra options\fP.
+\fBrahisto(1)\fP specific options are:
+.PP
+.PD 0
+.TP 4 4
+.B \-M nozero
+Don't print bins that have zero frequencies.
+.TP 4 4
+.B \-M outlayer
+Print accumulated stats for outlayer values, i.e. the values that
+are outside the histogram range.
+
+.TP 15
+.BI \-H "\| metric bin[L]:range | size\^"
+
+.TP 5
+Supported metrics are:
+.PP
+.RS
+.TP 15
+.B dur
+record total duration.
+.TP
+.B avgdur
+record average duration.
+.TP
+.B proto
+transaction protocol.
+.TP
+.B sport
+source port number.
+.TP
+.B dport
+destination port number.
+.TP
+.B stos
+source TOS byte value.
+.TP
+.B dtos
+destination TOS byte value.
+.TP
+.B sttl
+src -> dst TTL value.
+.TP
+.B dttl
+dst -> src TTL value.
+.TP
+.B [s|d]bytes
+[src | dst] transaction bytes.
+.TP
+.B [s|d]appbytes
+[src | dst] application bytes.
+.TP
+.B [s|d]pkts
+dst -> src packet count.
+.TP
+.B [s|d]load
+packets per second.
+.TP
+.B [s|d]loss
+pkts retransmitted or dropped.
+.TP
+.B [s|d]ploss
+percent pkts retransmitted or dropped.
+.TP
+.B [s|d]rate
+bits per second.
+.PD
+.RE
+
+.SH INVOCATION
+A sample invocation of \fBrahisto(1)\fP.  This call reads \fBargus(8)\fP data
+from \fBinputfile\fP and generates a frequency distribution histogram for
+the round-trip time of arp volleys in \fBargus(8)\fP data, between two
+hosts in a local area network, a.b.c.d and a.b.c.e. 
+.TP 5
+\fBrahisto\fP -H dur 20:50-150u -r inputfile -M outlayer - arp and src pkts 1 and dst pkts 1
+.SH SEE ALSO
+.BR ra(1),
+.BR rarc(5),
+.BR argus(8),
+.SH FILES
+
+.SH AUTHORS
+.nf
+Carter Bullard (carter@qosient.com).
+.fi
+.SH BUGS

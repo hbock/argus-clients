@@ -1,0 +1,332 @@
+dnl Process this file with autoconf to produce a configure script.
+bs
+
+dnl
+AC_INIT(common/argus_main.c)
+
+dnl all our local stuff like install scripts and include files
+dnl is in there
+AC_CONFIG_AUX_DIR(config)
+
+AC_CANONICAL_SYSTEM
+
+AC_LBL_C_INIT(V_CCOPT, V_INCLS)
+AC_C_INLINE
+
+dnl where we install our stuff ...
+AC_PREFIX_DEFAULT( /usr/local )
+
+dnl Minimum Autoconf version required.
+AC_PREREQ(2.13)
+
+AC_PROG_CC
+AC_PROG_CPP
+AC_PROG_RANLIB
+
+AC_QOSIENT_LEX_AND_YACC(V_LEX, V_YACC, argus_)
+
+AC_CHECK_PROGS(V_RANLIB, ranlib, @true)
+AC_LBL_UNALIGNED_ACCESS
+
+AC_REPLACE_FUNCS(vfprintf strcasecmp strdup)
+AC_CHECK_FUNCS(strlcat strlcpy)
+AC_CHECK_FUNCS(strftime)
+AC_CHECK_FUNCS(setlinebuf)
+AC_CHECK_FUNCS(setenv)
+AC_CHECK_FUNCS(alarm)
+AC_CHECK_FUNCS(getaddrinfo)
+AC_CHECK_FUNCS(getpassphrase)
+AC_CHECK_FUNCS(readpassphrase)
+
+AC_CHECK_HEADERS(sys/vfs.h)
+
+#AC_CHECK_HEADERS(sys/bitypes.h)
+
+AC_CHECK_TYPE([int8_t], ,
+        [AC_DEFINE([int8_t], [signed char],
+        [Define to `signed char' if int8_t not defined.])])
+AC_CHECK_TYPE([u_int8_t], ,
+        [AC_DEFINE([u_int8_t], [unsigned char],
+        [Define to `unsigned char' if u_int8_t not defined.])],
+        [AC_INCLUDES_DEFAULT
+#ifdef HAVE_SYS_BITYPES_H
+#include <sys/bitypes.h>
+#endif])
+AC_CHECK_TYPE([int16_t], ,
+        [AC_DEFINE([int16_t], [short],
+        [Define to `short' if int16_t not defined.])])
+AC_CHECK_TYPE([u_int16_t], ,
+        [AC_DEFINE([u_int16_t], [unsigned short],
+        [Define to `unsigned short' if u_int16_t not defined.])],
+        [AC_INCLUDES_DEFAULT
+#ifdef HAVE_SYS_BITYPES_H
+#include <sys/bitypes.h>
+#endif])
+AC_CHECK_TYPE([int32_t], ,
+        [AC_DEFINE([int32_t], [int],
+        [Define to `int' if int32_t not defined.])])
+AC_CHECK_TYPE([u_int32_t], ,
+        [AC_DEFINE([u_int32_t], [unsigned int],
+        [Define to `unsigned int' if u_int32_t not defined.])],
+        [AC_INCLUDES_DEFAULT
+#ifdef HAVE_SYS_BITYPES_H
+#include <sys/bitypes.h>
+#endif])
+AC_CHECK_TYPE([int64_t], ,
+        [AC_DEFINE([int64_t], [long long],
+        [Define to `long long' if int64_t not defined.])])
+AC_CHECK_TYPE([u_int64_t], ,
+        [AC_DEFINE([u_int64_t], [unsigned long long],
+        [Define to `unsigned long long' if u_int64_t not defined.])],
+        [AC_INCLUDES_DEFAULT
+#ifdef HAVE_SYS_BITYPES_H
+#include <sys/bitypes.h>
+#endif])
+
+#
+# We can't just check for <inttypes.h> - some systems have one that
+# doesn't define all the PRI[doxu]64 macros.
+#
+AC_CHECK_HEADERS(inttypes.h,
+  [
+    #
+    # OK, we have inttypes.h, but does it define those macros?
+    #
+    AC_MSG_CHECKING([[whether inttypes.h defines the PRI[doxu]64 macros]])
+    AC_COMPILE_IFELSE(
+      [
+        AC_LANG_SOURCE(
+          [[
+            #include <inttypes.h>
+            #include <stdio.h>
+            #include <sys/types.h>
+            #ifdef HAVE_SYS_BITYPES_H
+            #include <sys/bitypes.h>
+            #endif
+
+            main()
+            {
+              printf("%" PRId64 "\n", (u_int64_t)1);
+              printf("%" PRIo64 "\n", (u_int64_t)1);
+              printf("%" PRIx64 "\n", (u_int64_t)1);
+              printf("%" PRIu64 "\n", (u_int64_t)1);
+            }
+          ]])
+      ],
+      [
+        AC_MSG_RESULT(yes)
+        ac_lbl_inttypes_h_defines_formats=yes
+      ],
+      [
+        AC_MSG_RESULT(no)
+        ac_lbl_inttypes_h_defines_formats=no
+      ])
+  ],
+  [
+    #
+    # We don't have inttypes.h, so it obviously can't define those
+    # macros.
+    #
+    ac_lbl_inttypes_h_defines_formats=no
+  ])
+if test "$ac_lbl_inttypes_h_defines_formats" = "no"; then
+  AC_LBL_CHECK_64BIT_FORMAT(l,
+    [
+      AC_LBL_CHECK_64BIT_FORMAT(ll,
+        [
+          AC_LBL_CHECK_64BIT_FORMAT(L,
+            [
+              AC_LBL_CHECK_64BIT_FORMAT(q,
+                [
+                  AC_MSG_ERROR([neither %llx nor %Lx nor %qx worked on a 64-bit integer])
+                ])
+            ])
+        ])
+    ])
+fi
+
+AC_LBL_DEVEL(V_CCOPT)
+AC_QOSIENT_DEBUG(V_CCOPT)
+
+CMU_SASL2(V_INCLS)
+
+AC_SYS_LARGEFILE
+AC_CMU_MYSQL
+AC_QOSIENT_MEMORY
+
+case "$target_os" in
+   *darwin*)
+         LIBS="-L/opt/local/lib $LIBS"
+         INCLS="-I/opt/local/include $INCLS"
+#        CCOMPATLIB="-lz"
+         ;;
+   *) COMPATLIB="-lm"
+esac
+
+AC_QOSIENT_THREADS(V_THREADS)
+AC_QOSIENT_TCPWRAP(V_WRAPDEP, V_INCLS)
+if test ! -z "$V_WRAPDEP"; then
+   if test -f $V_WRAPDEP; then
+      if test -f lib/libwrap.a; then
+         rm -rf lib/libwrap.a
+      fi
+      wrapdir=`echo $V_WRAPDEP | sed -e 's/^\.\./..\/../'`
+      ln -s $wrapdir lib/libwrap.a
+      V_WRAPDEP="../lib/libwrap.a"
+   else 
+      if test "$V_WRAPDEP" = "-lwrap" ; then
+         if test -f lib/libwrap.a; then
+            rm -rf lib/libwrap.a
+         fi
+         case "$target_os" in
+         linux*)
+            V_WRAPDEP="$V_WRAPDEP -lnsl";;
+         esac
+      fi
+   fi   
+   AC_DEFINE(HAVE_TCP_WRAPPER)
+   WRAPLIBS="$V_WRAPDEP"
+fi
+
+
+AC_HAVE_HEADERS(sys/sockio.h string.h fcntl.h sys/file.h syslog.h)
+AC_CHECK_FUNCS(ether_hostton strerror strtof srandomdev)
+
+CURSESLIB=""
+
+AC_CHECK_HEADERS(ncurses.h, AC_CHECK_LIB(ncurses, initscr,
+	CURSESLIB="-lncurses", 
+	AC_CHECK_LIB(curses, initscr,
+                CURSESLIB="-lcurses"),))
+
+if test "$CURSESLIB" = "-lncurses"; then
+        cat >> confdefs.h <<\EOF 
+#define ARGUS_CURSES 1 
+#define ARGUS_NCURSES_H 1
+EOF
+else
+if test "$CURSESLIB" = "-lcurses"; then
+        cat >> confdefs.h <<\EOF 
+#define ARGUS_CURSES 1 
+#define ARGUS_CURSES_H 1
+EOF
+fi
+fi
+
+
+AC_QOSIENT_READLINE(V_READLINE)
+
+case "$target_cpu" in
+*86)
+   AC_DEFINE(CONFIG_X86_BSWAP,1)
+   ;;
+
+powerpc-apple*)
+   ;;
+        
+powerpc64-*-linux-gnu)
+   V_CCOPT="$V_CCOPT -m64 -fPIC"
+   ;;   
+        
+esac    
+
+case "$target_os" in
+
+aix*)
+	dnl Workaround to enable certain features
+	AC_DEFINE(_SUN)
+	;;
+
+darwin*)
+	AC_DEFINE(HAVE_DARWIN)
+	;;
+
+hpux9*)
+	AC_DEFINE(HAVE_HPUX9)
+	;;
+
+hpux10.0*)
+	;;
+
+hpux10.1*)
+	;;
+
+hpux*)
+	dnl HPUX 10.20 and above is similar to HPUX 9...
+	AC_DEFINE(HAVE_HPUX10_20)
+	;;
+
+sinix*)
+	AC_MSG_CHECKING(if SINIX compiler defines sinix)
+	AC_CACHE_VAL(ac_cv_cc_sinix_defined,
+		AC_TRY_COMPILE(
+		    [],
+		    [int i = sinix;],
+		    ac_cv_cc_sinix_defined=yes,
+		    ac_cv_cc_sinix_defined=no))
+	    AC_MSG_RESULT($ac_cv_cc_sinix_defined)
+	    if test "$ac_cv_cc_sinix_defined" = "no" ; then
+		    AC_DEFINE(sinix)
+	    fi
+	;;
+
+solaris*)
+	AC_DEFINE(HAVE_SOLARIS,1,[On solaris])
+	AC_MSG_CHECKING(for LD_LIBRARY_PATH, since you appear to be running Solaris)
+	if test "x$LD_LIBRARY_PATH" != "x" ; then
+		LIBS="$LIBS -R$LD_LIBRARY_PATH"
+		AC_MSG_RESULT(yes -- added LD_LIBRARY_PATH to run-time linker path)
+	else
+		AC_MSG_RESULT(no -- this may be a problem in a few seconds)
+	fi
+	COMPATLIB="-lsocket -lnsl -lrt $COMPATLIB"
+	;;
+
+linux*)
+	;;
+
+cygwin*)
+	AC_DEFINE(CYGWIN,1)
+	V_INCLS="$V_INCLS -I../include/cygwin-include"
+	;;
+esac
+
+AC_QOSIENT_GEOIP(V_GEOIPDEP, V_INCLS)
+
+INSTALL_LIB="../lib"
+INSTALL_BIN="../bin"
+
+AC_SUBST(LIBS)
+AC_SUBST(INCLS)
+AC_SUBST(V_CCOPT)
+AC_SUBST(V_INCLS)
+AC_SUBST(V_RANLIB)
+AC_SUBST(V_YACC)
+AC_SUBST(V_LEX)
+AC_SUBST(V_THREADS)
+AC_SUBST(V_READLINE)
+AC_SUBST(V_GEOIPDEP)
+AC_SUBST(WRAPLIBS)
+AC_SUBST(COMPATLIB)
+AC_SUBST(CURSESLIB)
+AC_SUBST(INSTALL_LIB)
+AC_SUBST(INSTALL_BIN)
+
+AC_PROG_INSTALL
+AC_STDC_HEADERS
+
+AC_OUTPUT(
+   Makefile
+   ./common/Makefile
+   ./clients/Makefile
+   ./ragraph/Makefile
+   ./ratop/Makefile
+   ./radium/Makefile
+   ./radump/Makefile
+   ./ramysql/Makefile
+)
+
+if test -f .devel ; then
+	make depend
+fi
+exit 0

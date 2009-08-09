@@ -1,0 +1,276 @@
+/*
+ * Argus Software
+ * Copyright (c) 2000-2008 QoSient, LLC
+ * All rights reserved.
+ *
+ * QOSIENT, LLC DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS
+ * SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND
+ * FITNESS, IN NO EVENT SHALL QOSIENT, LLC BE LIABLE FOR ANY
+ * SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER
+ * RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF
+ * CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN
+ * CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ *
+ */
+
+Argus How To File
+
+    1. How do I join the Argus mailing list?
+    2. How do I report bugs?
+    3. How do I compile Argus?
+    4. How do I install Argus?
+    5. How do I configure Argus?
+    6. How do I run Argus?
+    7. How do you run argus on your systems?
+    8. How do I audit my web servers?
+    9. How do I audit the traffic between my corporate network and my ISP?
+   10. How do I do things with argus data.
+
+
+
+1. How do I join the Argus mailing list?
+      Send "subscribe argus" in the body of a piece of mail
+      to majordomo@lists.andrew.cmu.edu
+
+2. How do I report bugs?
+      Use the tool ./bin/argusbug to send your bug report
+      to the argus mailing list.  Argusbug will present you
+      with a bug reporting form, that includes some system
+      information.  If you are unhappy providing the information
+      supplied by Argusbug, you are free to delete it.
+
+      Send any comments/fixes/opinions/whatever to the
+      mailing list.  Someone will send a reply.
+
+
+3. How do I compile Argus?
+      Building specifics for argus are described in the ./INSTALL file.
+      The quick method is:
+
+         % ./configure
+         % make
+
+
+4. How do I install Argus?
+      Detail installation instructions are in the ./INSTALL file.
+      But the fast an easy way is to:
+
+         make install
+
+
+5. How do I configure Argus?
+      For most uses, Argus will require only a few simple
+      configuration variable set to do work.   For the
+      custom minded, Argus supports a large number of options.
+      
+      Argus is generally configured using the .argusrc file that
+      is normally found in $ARGUSHOME.  The variables that are
+      set by this file can be overriden by the use of command
+      line switches or an alternative configuration file
+      that is specified using the "-F configfile" option.
+
+      See ./example/.argusrc for a description of options and
+      their default settings.  This sample file sets most of
+      the common options.
+
+
+6. How do I run Argus?
+      Argus is run either as a persistant daemon, reading live
+      packets from a network interface, or as a program,
+      reading packets from a packet capture file.  The default,
+      i.e. when it is run without any configuration, is to run
+      as a daemon. 
+
+      The only real question to answer is where do you want
+      argus to send its output.  The basic options are to write
+      to a file, or to offer remote access via a socket, or both.
+
+      Most installations will run configure argus to write its
+      output to a file.  To do this, run argus as:
+
+         # argus -w outputfile
+
+      This will cause Argus to run as a daemon, reading packets
+      from the first available network interface, and writing
+      its output to an outputfile.
+
+      If you intend to remotely attach to this argus, you'll need to
+      tell argus what port to put a listen down on.  The default
+      port for clients is port 561.  We recommend using this port
+      number.
+
+         # argus -P 561 -w outputfile
+
+
+      In order to configure argus to read packets from a packet 
+      capture file, use the "-r" option.
+
+         % argus -r ./packetfile
+
+      Argus has a large number of options, which can be set
+      through an .argusrc file, the use of command line options,
+      or through a separate configuration file that is specifed
+      at run time.  These options are designed to specify things
+      like, what type of information Argus should capture, how
+      often it should generate output records, whether it should
+      put the network interface in promiscuous mode when run,
+      should it create a pid file, etc...  The complete list is
+      described int the argus.8 man page.
+
+
+7. How do you run argus on your systems?
+
+      argus -e `hostname` -P 561 -U128 -mRS 30 -w $ARGUSHOME/argus.out
+
+
+8. How do I audit my web servers?
+
+      Argus can be deployed either on the network using a tapping
+      strategy that captures all the packets destined to and from
+      the target web server, or Argus can be deployed on the web
+      server itself.  In any case, if the desire is to measure
+      web performance itself, Argus should be deployed as close
+      to the server as physically possible.
+
+      Deploying Argus on the server itself is my preferred
+      strategy as it solves some basic problems with monitoring
+      multi-interface load balanced servers.  Some sites will
+      be concerned with the cycles used by Argus and stability
+      issues, but for the majority of servers in use in the
+      Internet today, this will be the right strategy, as it
+      is the least expensive.
+
+              +-----------+       +-----------+     
+              |       +-+ |       |       +-+ |   
+              |       | | |       |       | | +------
+              |       | | +-------+       | | |
+              |       | | |       |       | | +------
+              |       +-+ |       |       +-+ |   
+              +-----------+       +-----------+   
+              Web Back End        Web Front End  
+              with resident       with resident
+                  Argus               Argus
+                          
+                           Figure 1.
+
+      When off server deployment is indicated, Argus can be
+      deployed any where in the network where there is access
+      to packets of interest.  Usually using a switch or
+      hub that is inline with the target packet data is the
+      way to go.
+
+                 +-----------+     Switch
+                 |           |      Hub
+                 |           |     +---+
+                 |           +-----+   +-------
+                 |           |     +-+-+
+                 |           |       | 
+                 +-----------+       |
+                   Web Server    +---+---+
+                                 | Argus |
+                                 +-------+
+            
+                           Figure 2.
+
+
+       There are situations where the effects of load balancers
+       will want to be monitored.  In this case, multiple Argi
+       can be deployed to monitor pre and post load balanced
+       flow data.
+
+
+                    Switch                    Switch
+      +-------+      Hub       +-------+       Hub      
+      |       |     +---+      |       |      +---+    
+      |       +-----+   +------+       +------+   +------
+      |       |     +-+-+      |       |      +-+-+    
+      +-------+       |        +-------+        |       
+      Web Server      |      Load Balancer      |        
+                  +---+---+                 +---+---+
+                  | Argus |                 | Argus |
+                  +-------+                 +-------+
+
+                           Figure 3.
+
+
+
+9. How do I audit the traffic between my corporate network and my ISP?
+
+      The trick here is to deploy Argus such that it can see
+      all the packets between the corp network and the Internet.
+      In many networks there is a network ethernet DMZ.  This is the
+      ideal location to place Argus, a common link that is physically
+      accessible that can have complete cover over all the packets.
+
+      This is especially true when there are multiple ISP links being
+      used by the corporation.
+
+      A Switch or a Hub can be used to tap into the DMZ so that
+      the Argus host can see the full duplex channel between the
+      two routers, as shown below.
+
+                            Switch    +-----------+
+               +------+      Hub      |           +------- ISP
+               |      |    +-----+    |           |
+   corp  ------+      +----+     +----+   Router  +------- ISP
+               |      |    +--+--+    |           |
+               +------+       |       |           +------- ISP
+                router        |       +-----------+
+                          +---+---+
+                          | Argus |
+                          +-------+
+
+                           Figure 4.
+
+      If you can't insert a switch or a hub into the link as
+      shown in Figure 4, then you've got a bit of a puzzle.
+
+      In some cases you can configure your router to "port steer"
+      or port copy the packets that you are interested in to a
+      common monitoring port.  When a switch or hub cannot be
+      installed on the DMZ link, this would be the next likely
+      strategy.
+
+                        +-----------+ B
+                        |           +------- ISP
+                      A |   Router  | C
+           Corp    -----+   Switch  +------- ISP
+                        |           | D
+                        |           +------- ISP
+                        +-----+-----+
+                              | E
+                          +---+---+
+                          | Argus |
+                          +-------+
+
+      If the router/switch can be configured to copy both
+      incoming and outgoing packets from Interface A to 
+      Interface E, then the problem is solved, as this
+      will get all the packets (assuming you don't support
+      routing between interfaces B, C or D).
+
+      Interface E should have the bandwidth needed to handle
+      the full load of the traffic.  In our example above,
+      If interface A is a 10 Mbps ethernet link, interface
+      E should be a 100Mpbs interface, so that it can handle
+      the 20 Mbps of total load interface A can support.
+
+      If the device does not support full duplex port copy,
+      then a strategy that copies all the incoming interfaces
+      of the router/switch to a common monitor interface will
+      also get all the packets.
+      
+      If none of the above is possible, then ~here are WAN
+      probe taps available that will support packet capture
+      from ISP links.  These are pretty expensive, sometimes
+      more than the entire cost of the Argus probe itself,
+      but they are available.
+
+
+10. How do I do things with argus data.
+      Get the argus-clients distribution that match the highest
+      argus data source version, and then get started ;o)
+
+      http://qosient.com/argus
+
+

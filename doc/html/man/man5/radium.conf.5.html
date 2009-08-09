@@ -1,0 +1,362 @@
+Content-type: text/html
+
+<HTML><HEAD><TITLE>Manpage of RADIUM.CONF</TITLE>
+</HEAD><BODY>
+<H1>RADIUM.CONF</H1>
+Section: User Commands  (1)<BR>Updated: 07 November 2000<BR><A HREF="#index">Index</A>
+<A HREF="http://localhost/cgi-bin/man/man2html">Return to Main Contents</A><HR>
+
+<A NAME="lbAB">&nbsp;</A>
+<H2>NAME</H2>
+
+<B>radium.conf</B> - <B>radium</B> resource file.
+<A NAME="lbAC">&nbsp;</A>
+<H2>SYNOPSIS</H2>
+
+<B>radium.conf</B>
+
+<A NAME="lbAD">&nbsp;</A>
+<H2>COPYRIGHT</H2>
+
+Copyright (c) 2000-2007 QoSient  All rights reserved.
+<A NAME="lbAE">&nbsp;</A>
+<H2>DESCRIPTION</H2>
+
+<P>
+Radium will open this radium.conf if its installed as /etc/radium.conf.
+It will also search for this file as radium.conf in directories
+specified in $RADIUMPATH, or $RADIUMHOME, $RADIUMHOME/lib,
+or $HOME, $HOME/lib, and parse it to set common configuration
+options.  All values in this file can be overriden by command
+line options, or other files of this format that can be read in
+using the -F option.
+<P>
+<A NAME="lbAF">&nbsp;</A>
+<H2>Variable Syntax</H2>
+
+<P>
+Variable assignments must be of the form:
+<PRE>
+  VARIABLE=
+</PRE>
+
+with no white space between the VARIABLE and the '=' sign.
+Quotes are optional for string arguments, but if you want
+to embed comments, then quotes are required.
+<P>
+<A NAME="lbAG">&nbsp;</A>
+<H2>RADIUM_DAEMON</H2>
+
+<P>
+Radium is capable of running as a daemon, doing all the right things
+that daemons do.  When this configuration is used for the system
+daemon process, say for /etc/radium.conf, this variable should be
+set to &quot;yes&quot;.
+<P>
+The default value is to not run as a daemon.
+<P>
+This example is to support the ./support/Startup/radium script
+which requires that this variable be set to &quot;yes&quot;.
+<P>
+Commandline equivalent  -d
+<P>
+<B>RADIUM_DAEMON=</B>no
+<P>
+<A NAME="lbAH">&nbsp;</A>
+<H2>RADIUM_MONITOR_ID</H2>
+
+<P>
+Radium Monitor Data is uniquely identifiable based on the source
+identifier that is included in each output record.  This is to
+allow you to work with Radium Data from multiple monitors at the
+same time.  The ID is 32 bits long, and so legitimate values are
+0 - 4294967296 but radium also supports IP addresses as values.
+The configuration allows for you to use host names, however, do
+have some understanding how `hostname` will be resolved by the
+nameserver before commiting to this strategy completely.
+<P>
+Commandline equivalent  -e
+<P>
+<B>RADIUM_MONITOR_ID</B>=`hostname`
+<P>
+<A NAME="lbAI">&nbsp;</A>
+<H2>RADIUM_ARGUS_SERVER</H2>
+
+<P>
+Radium can attach to any number of remote argus servers, and
+collect argus data in real time.  The syntax for this variable
+is a hostname or a dot notation IP address, followed by an
+optional port value, separated by a ':'.  If the port is not
+specified, the default value of 561 is used.
+<P>
+Commandline equivalent   -S &lt;host[:port]&gt;
+<P>
+<B>RADIUM_ARGUS_SERVER</B>=localhost:561
+<P>
+<A NAME="lbAJ">&nbsp;</A>
+<H2>RADIUM_CISCONETFLOW_PORT</H2>
+
+<P>
+Radium can read Cicso Netflow records directly from Cisco
+routers.  Specifying this value will alert Radium to open
+a UDP based socket listening for data from this name or address.
+<P>
+Commandline equivalent   -C
+<P>
+<B>RADIUM_CISCONETFLOW_PORT</B>=9996
+<P>
+<A NAME="lbAK">&nbsp;</A>
+<H2>RADIUM_USER_AUTH, RADIUM_AUTH_PASS</H2>
+
+<P>
+When argus is compiled with SASL support, ra* clients may be
+required to authenticate to the argus server before the argus
+will accept the connection.  This variable will allow one to
+set the user and authorization id's, if needed.  Although
+not recommended you can provide a password through the
+RADIUM_AUTH_PASS variable.  The format for this variable is:
+<P>
+Commandline equivalent   -U
+<P>
+<B>RADIUM_USER_AUTH</B>=user_id/authorization_id
+<B>RADIUM_AUTH_PASS</B>=the_password
+<P>
+<A NAME="lbAL">&nbsp;</A>
+<H2>RADIUM_ACCESS_PORT</H2>
+
+<P>
+Radium monitors can provide a real-time remote access port
+for collecting Radium data.  This is a TCP based port service and
+the default port number is tcp/561, the &quot;experimental monitor&quot;
+service.  This feature is disabled by default, and can be forced
+off by setting it to zero (0).
+<P>
+When you do want to enable this service, 561 is a good choice,
+as all ra* clients are configured to try this port by default.
+<P>
+Commandline equivalent  -P
+<P>
+<B>RADIUM_ACCESS_PORT=</B>561
+<P>
+<A NAME="lbAM">&nbsp;</A>
+<H2>RADIUM_BIND_IP</H2>
+
+<P>
+When remote access is enabled (see above), you can specify that
+Radium should bind only to a specific IP address.  This is useful,
+for example, in restricting access to the local host, or binding
+to a private interface while capturing from another. The default
+is to bind to any IP address.
+<P>
+Commandline equivalent  -B
+<P>
+<B>RADIUM_BIND_IP=</B>&quot;127.0.0.1&quot;
+<P>
+<A NAME="lbAN">&nbsp;</A>
+<H2>RADIUM_OUTPUT_FILE</H2>
+
+<P>
+Radium can write its output to one or a number of files,
+default limit is 5 concurrent files, each with their own
+independant filters.
+<P>
+The format is:
+<PRE>
+     RADIUM_OUTPUT_FILE=/full/path/file/name
+     RADIUM_OUTPUT_FILE=/full/path/file/name &quot;filter&quot;
+</PRE>
+
+<P>
+Most sites will have radium write to a file, for reliablity 
+and performance.  The example file name is used here as
+supporting programs, such as ./support/Archive/radiumarchive
+are configured to use this file.
+<P>
+Commandline equivalent  -w
+<P>
+<B>RADIUM_OUTPUT_FILE=</B>/var/log/radium/radium.out
+<P>
+<A NAME="lbAO">&nbsp;</A>
+<H2>RADIUM_SET_PID</H2>
+
+<P>
+When Radium is configured to run as a daemon, with the -d
+option, Radium can store its pid in a file, to aid in
+managing the running daemon.  However, creating a system
+pid file requires priviledges that may not be appropriate
+for all cases.
+<P>
+When configured to generate a pid file, if Radium cannot
+create the pid file, it will fail to run.  This variable
+is available to override the default, in case this gets
+in your way.
+<P>
+The default value is to generate a pid.
+<P>
+No Commandline equivalent   
+<P>
+<B>RADIUM_SET_PID</B>=yes
+<P>
+<BR>&nbsp;
+<A NAME="lbAP">&nbsp;</A>
+<H2>RADIUM_ADJUST_TIME</H2>
+
+<P>
+Radium can correct for time synchronization problems that
+may exist between data sources.  If configured to do so,
+radium will adjust all the timestamps in records by the
+calculated drift between radium and its many data sources.
+Records whose timevalues have been 'corrected' are marked
+so that subsequent readers can differentiate between 
+true primitive time and modified time.
+<P>
+Commandline equivalent   -T
+<BR>&nbsp;
+<B>RADIUM_ADJUST_TIME=</B>no
+<P>
+<A NAME="lbAQ">&nbsp;</A>
+<H2>RADIUM_MAR_STATUS_INTERVAL</H2>
+
+<P>
+Radium will periodically report on a its own health, providing
+interface status, total packet and bytes counts, packet drop
+rates, and flow oriented statistics.
+<P>
+These records can be used as &quot;keep alives&quot; for periods when
+there is no network traffic to be monitored.
+<P>
+The default value is 300 seconds, but a value of 60 seconds is
+very common.
+<P>
+Commandline equivalent   -M
+<P>
+<B>RADIUM_MAR_STATUS_INTERVAL</B>=60
+<P>
+<A NAME="lbAR">&nbsp;</A>
+<H2>RADIUM_DEBUG_LEVEL</H2>
+
+<P>
+If compiled to support this option, Radium is capable of
+generating a lot of debug information.
+<P>
+The default value is zero (0).
+<P>
+Commandline equivalent  -D
+<P>
+<B>RADIUM_DEBUG_LEVEL=</B>0
+<P>
+<A NAME="lbAS">&nbsp;</A>
+<H2>RADIUM_FILTER_OPTIMIZER</H2>
+
+<P>
+Radium uses the packet filter capabilities of libpcap.  If
+there is a need to not use the libpcap filter optimizer,
+you can turn it off here.  The default is to leave it on.
+<P>
+Commandline equivalent  -O
+<P>
+<B>RADIUM_FILTER_OPTIMIZER=</B>yes
+<P>
+<A NAME="lbAT">&nbsp;</A>
+<H2>RADIUM_FILTER</H2>
+
+<P>
+You can provide a filter expression here, if you like.
+It should be limited to 2K in length.  The default is to
+not filter.
+<P>
+No Commandline equivalent
+<P>
+<B>RADIUM_FILTER=</B>&quot;&quot;
+<P>
+<P>
+<A NAME="lbAU">&nbsp;</A>
+<H2>RADIUM_CHROOT_DIR</H2>
+
+<P>
+Radium supports <A HREF="http://localhost/cgi-bin/man/man2html?2+chroot">chroot</A>(2) in order to control the file system that
+radium exists in and can access.  Generally used when radium is running
+with privleges, this limits the negative impacts that radium could
+inflict on its host machine.  
+<P>
+This option will cause the output file names to be relative to this
+directory, and so consider this when trying to find your output files.
+<P>
+Commandline equivalent   -C
+<P>
+<B>RADIUM_CHROOT_DIR=</B>&quot;&quot;
+<BR>&nbsp;
+<BR>&nbsp;
+<A NAME="lbAV">&nbsp;</A>
+<H2>RADIUM_SETUSER_ID</H2>
+
+<P>
+Radium can be directed to change its user id using the setuid() system
+call.  This is can used when radium is started as root, in order to
+access privleged resources, but then after the resources are opened,
+this directive will cause radium to change its user id value to
+a 'lesser' capable account.  Recommended when radium is running as a
+daemon. 
+<P>
+Commandline equivalent   -u 
+<P>
+<B>RADIUM_SETUSER_ID=</B>&quot;user&quot;
+<BR>&nbsp;
+<A NAME="lbAW">&nbsp;</A>
+<H2>RADIUM_SETGROUP_ID</H2>
+
+<BR>&nbsp;
+Radium can be directed to change its group id using the setgid() system
+call.  This is can used when radium is started as root, in order to
+access privleged resources, but then after the resources are opened,
+this directive can be used to change argu's group id value to
+a 'lesser' capable account.  Recommended when radium is running as a
+daemon.
+<P>
+Commandline equivalent   -g
+<P>
+<B>RADIUM_SETGROUP_ID=</B>&quot;group&quot;
+<BR>&nbsp;
+
+<A NAME="lbAX">&nbsp;</A>
+<H2>SEE ALSO</H2>
+
+<B><A HREF="http://localhost/cgi-bin/man/man2html?8+radium">radium</A></B>(8)
+
+<P>
+<P>
+
+<HR>
+<A NAME="index">&nbsp;</A><H2>Index</H2>
+<DL>
+<DT><A HREF="#lbAB">NAME</A><DD>
+<DT><A HREF="#lbAC">SYNOPSIS</A><DD>
+<DT><A HREF="#lbAD">COPYRIGHT</A><DD>
+<DT><A HREF="#lbAE">DESCRIPTION</A><DD>
+<DT><A HREF="#lbAF">Variable Syntax</A><DD>
+<DT><A HREF="#lbAG">RADIUM_DAEMON</A><DD>
+<DT><A HREF="#lbAH">RADIUM_MONITOR_ID</A><DD>
+<DT><A HREF="#lbAI">RADIUM_ARGUS_SERVER</A><DD>
+<DT><A HREF="#lbAJ">RADIUM_CISCONETFLOW_PORT</A><DD>
+<DT><A HREF="#lbAK">RADIUM_USER_AUTH, RADIUM_AUTH_PASS</A><DD>
+<DT><A HREF="#lbAL">RADIUM_ACCESS_PORT</A><DD>
+<DT><A HREF="#lbAM">RADIUM_BIND_IP</A><DD>
+<DT><A HREF="#lbAN">RADIUM_OUTPUT_FILE</A><DD>
+<DT><A HREF="#lbAO">RADIUM_SET_PID</A><DD>
+<DT><A HREF="#lbAP">RADIUM_ADJUST_TIME</A><DD>
+<DT><A HREF="#lbAQ">RADIUM_MAR_STATUS_INTERVAL</A><DD>
+<DT><A HREF="#lbAR">RADIUM_DEBUG_LEVEL</A><DD>
+<DT><A HREF="#lbAS">RADIUM_FILTER_OPTIMIZER</A><DD>
+<DT><A HREF="#lbAT">RADIUM_FILTER</A><DD>
+<DT><A HREF="#lbAU">RADIUM_CHROOT_DIR</A><DD>
+<DT><A HREF="#lbAV">RADIUM_SETUSER_ID</A><DD>
+<DT><A HREF="#lbAW">RADIUM_SETGROUP_ID</A><DD>
+<DT><A HREF="#lbAX">SEE ALSO</A><DD>
+</DL>
+<HR>
+This document was created by
+<A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
+using the manual pages.<BR>
+Time: 13:20:15 GMT, May 16, 2007
+</BODY>
+</HTML>

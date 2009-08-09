@@ -1,0 +1,276 @@
+Content-type: text/html
+
+<HTML><HEAD><TITLE>Manpage of RACLUSTER</TITLE>
+</HEAD><BODY>
+<H1>RACLUSTER</H1>
+Section: User Commands  (1)<BR>Updated: 07 October 2003<BR><A HREF="#index">Index</A>
+<A HREF="http://localhost/cgi-bin/man/man2html">Return to Main Contents</A><HR>
+
+<A NAME="lbAB">&nbsp;</A>
+<H2>NAME</H2>
+
+<B>racluster</B> - aggregate <B><A HREF="http://localhost/cgi-bin/man/man2html?8+argus">argus</A>(8)</B> data files.
+<A NAME="lbAC">&nbsp;</A>
+<H2>SYNOPSIS</H2>
+
+<B>racluster</B>
+
+[<B>-f</B> <I>conf</I>] [<B>-m</B> <I>agr(s)</I>] [<B>-M</B> <I>mode(s)</I>] [<B>raoptions</B>]
+<A NAME="lbAD">&nbsp;</A>
+<H2>DESCRIPTION</H2>
+
+<A NAME="ixAAB"></A>
+<P>
+
+<B>Racluster</B>
+
+reads
+<B>argus</B>
+
+data from an <I>argus-data</I> source, and clusters/merges the records
+based on the flow key criteria specified either on the command line, or
+in a racluster configuration file, and outputs a valid <I>argus-stream</I>.
+This tool is primarily used for data mining, data management and report
+generation.
+<P>
+The default action is to merge status records from the same flow and
+argus probe, providing in some cases huge data reduction with
+limited loss of flow information.  Racluster provides the ability to
+modify the flow model key, either using the &quot;-m&quot; option, or in the
+racluster.conf file, allowing records to be clustered based on any
+number of attributes.  This supports the development of important
+reports, such as MPLS LSP usage statistics, DiffServe flow marking
+policy verification, VLAN group behavior, IP distance related
+measurements, routing loop detection, traceroute path data recovery,
+and complex availability/reachability reports, to name just a few
+useful applications.
+<P>
+Please see racluster.5 for detailed information regarding racluster
+configuration.  
+<P>
+<A NAME="lbAE">&nbsp;</A>
+<H2>OPTIONS</H2>
+
+Racluster, like all ra based clients, supports a number of
+<B>ra options</B> including filtering of input argus
+records through a terminating filter expression, and the ability
+to specify the output style, format and contents for printing
+data.  See <B><A HREF="http://localhost/cgi-bin/man/man2html?1+ra">ra</A>(1)</B> for a complete description of <B>ra options</B>.
+<B><A HREF="http://localhost/cgi-bin/man/man2html?1+racluster">racluster</A>(1)</B> specific options are:
+<P>
+
+
+<DL COMPACT>
+<DT><B>-m</B><I> aggregation object</I>
+
+<DD>
+Supported aggregation objects are:
+</DL>
+<P>
+
+<DL COMPACT><DT><DD>
+<DL COMPACT>
+<DT><B>none</B>
+
+<DD>
+use a null flow key.
+<DT><B>srcid</B>
+
+<DD>
+argus source identifier.
+<DT><B>smac</B>
+
+<DD>
+source mac(ether) addr.
+<DT><B>dmac</B>
+
+<DD>
+destination mac(ether) addr.
+<DT><B>smpls</B>
+
+<DD>
+source mpls label.
+<DT><B>dmpls</B>
+
+<DD>
+destination label addr.
+<DT><B>svlan</B>
+
+<DD>
+source vlan label.
+<DT><B>dvlan</B>
+
+<DD>
+destination vlan addr.
+<DT><B>saddr/[l|m]</B>
+
+<DD>
+source IP addr/[cidr len | m.a.s.k].
+<DT><B>daddr/[l|m]</B>
+
+<DD>
+destination IP addr/[cidr len | m.a.s.k].
+<DT><B>matrix/l</B>
+
+<DD>
+sorted src and dst IP addr/cidr len.
+<DT><B>proto</B>
+
+<DD>
+transaction protocol.
+<DT><B>sport</B>
+
+<DD>
+source port number.
+<DT><B>dport</B>
+
+<DD>
+destination port number.
+<DT><B>stos</B>
+
+<DD>
+source TOS byte value.
+<DT><B>dtos</B>
+
+<DD>
+destination TOS byte value.
+<DT><B>sttl</B>
+
+<DD>
+src -&gt; dst TTL value.
+<DT><B>dttl</B>
+
+<DD>
+dst -&gt; src TTL value.
+<DT><B>stcpb</B>
+
+<DD>
+src -&gt; dst TCP base sequence number.
+<DT><B>dtcpb</B>
+
+<DD>
+dst -&gt; src TCP base sequence number.
+<DT><B>inode</B>
+
+<DD>
+intermediate node, source of ICMP mapped events.
+<DT></DL>
+</DL>
+
+<DD>
+<DL COMPACT>
+<DT><B>-M</B><I> modes</I>
+
+<DD>
+Supported modes are:
+</DL>
+<P>
+
+<DL COMPACT><DT><DD>
+<DL COMPACT>
+<DT><B>norep</B>
+
+<DD>
+Do not generate an aggregate statistic for each flow.  This is used
+primarily when the output represents a single object.  Primarily used
+when merging status records to generate single flows that represent
+single transactions.
+<DT><B>rmon</B>
+
+<DD>
+Generate data suitable for producing RMON types of metrics.
+<DT><B>ind</B>
+
+<DD>
+Process each input file independantly, so that after the end of
+each inputfile, racluster flushes its output.
+<DT><B>replace</B>
+
+<DD>
+Replace each inputfile contents, with the aggregated output.
+
+</DL>
+</DL>
+
+<DL COMPACT>
+<DT><B>-V</B>
+
+<DD>
+Verbose operation, printing a line of output for each input file processed.
+Very useful when using the ra() -R option.
+
+<P>
+</DL>
+<A NAME="lbAF">&nbsp;</A>
+<H2>INVOCATION</H2>
+
+A sample invocation of <B><A HREF="http://localhost/cgi-bin/man/man2html?1+racluster">racluster</A>(1)</B>.  This call reads <B><A HREF="http://localhost/cgi-bin/man/man2html?8+argus">argus</A>(8)</B> data
+from <B>inputfile</B> and aggregates the IP protocol based <B><A HREF="http://localhost/cgi-bin/man/man2html?8+argus">argus</A>(8)</B> data,
+based on the source and destination address matrix and the destination port
+used by tcp flows, and report the metrics as a percent of the total.  For
+most services, this provides service specific metrics on a client/server basis.
+<DL COMPACT>
+<DT><PRE>
+<DD><B>racluster</B> -% -r inputfile -m saddr daddr dport - \
+   tcp and syn and synack
+
+This call reads <B><A HREF="http://localhost/cgi-bin/man/man2html?8+argus">argus</A>(8)</B> data from <B>inputfile</B> and generates the 
+path information that traceroute use would generate (assuming that traceroute
+was run during the observation period).  
+<DT><DD><B>racluster</B> -r inputfile -m saddr daddr sttl inode -w - - icmpmap  | \
+   <B>rasort</B>  -m sttl -s saddr dir daddr inode avgdur spkts
+
+
+</DL>
+</PRE><A NAME="lbAG">&nbsp;</A>
+<H2>COPYRIGHT</H2>
+
+Copyright (c) 2000-2007 QoSient. All rights reserved.
+<A NAME="lbAH">&nbsp;</A>
+<H2>SEE ALSO</H2>
+
+<B><A HREF="http://localhost/cgi-bin/man/man2html?5+racluster">racluster</A>(5),</B>
+
+<B><A HREF="http://localhost/cgi-bin/man/man2html?1+ra">ra</A>(1),</B>
+
+<B><A HREF="http://localhost/cgi-bin/man/man2html?5+rarc">rarc</A>(5),</B>
+
+<B><A HREF="http://localhost/cgi-bin/man/man2html?8+argus">argus</A>(8),</B>
+
+<A NAME="lbAI">&nbsp;</A>
+<H2>FILES</H2>
+
+<P>
+<A NAME="lbAJ">&nbsp;</A>
+<H2>AUTHORS</H2>
+
+<PRE>
+Carter Bullard (<A HREF="mailto:carter@qosient.com">carter@qosient.com</A>).
+</PRE>
+
+<A NAME="lbAK">&nbsp;</A>
+<H2>BUGS</H2>
+
+<P>
+
+<HR>
+<A NAME="index">&nbsp;</A><H2>Index</H2>
+<DL>
+<DT><A HREF="#lbAB">NAME</A><DD>
+<DT><A HREF="#lbAC">SYNOPSIS</A><DD>
+<DT><A HREF="#lbAD">DESCRIPTION</A><DD>
+<DT><A HREF="#lbAE">OPTIONS</A><DD>
+<DT><A HREF="#lbAF">INVOCATION</A><DD>
+<DT><A HREF="#lbAG">COPYRIGHT</A><DD>
+<DT><A HREF="#lbAH">SEE ALSO</A><DD>
+<DT><A HREF="#lbAI">FILES</A><DD>
+<DT><A HREF="#lbAJ">AUTHORS</A><DD>
+<DT><A HREF="#lbAK">BUGS</A><DD>
+</DL>
+<HR>
+This document was created by
+<A HREF="http://localhost/cgi-bin/man/man2html">man2html</A>,
+using the manual pages.<BR>
+Time: 13:20:15 GMT, May 16, 2007
+</BODY>
+</HTML>

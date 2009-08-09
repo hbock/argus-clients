@@ -1,0 +1,80 @@
+# 
+#  Argus Software
+#  Copyright (c) 2000-2008 QoSient, LLC
+#  All rights reserved.
+# 
+#  This program is free software; you can redistribute it and/or modify
+#  it under the terms of the GNU General Public License as published by
+#  the Free Software Foundation; either version 2, or (at your option)
+#  any later version.
+#
+#  This program is distributed in the hope that it will be useful,
+#  but WITHOUT ANY WARRANTY; without even the implied warranty of
+#  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+#  GNU General Public License for more details.
+#
+#  You should have received a copy of the GNU General Public License
+#  along with this program; if not, write to the Free Software
+#  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+# 
+#
+# @(#) $Header: /usr/local/cvs/argus-clients/ragraph/Makefile.in,v 1.11 2003/06/13 02:46:03 qosient Exp $ (LBL)
+
+#
+# Various configurable paths (remember to edit Makefile.in, not Makefile)
+#
+
+# Top level hierarchy
+
+prefix = @prefix@
+exec_prefix = @exec_prefix@
+datarootdir = @datarootdir@
+
+# Pathname of directory to install the system binaries
+SBINDIR = @sbindir@
+# Pathname of directory to install the system binaries
+BINDIR = @bindir@
+# Pathname of directory to install the include files
+INCLDEST = @includedir@
+# Pathname of directory to install the library
+LIBDEST =  @libdir@
+# Pathname of directory to install the man page
+MANDEST = @mandir@
+
+# VPATH
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+#
+# You shouldn't need to edit anything below.
+#
+
+INSTALL = @INSTALL@
+
+PROGS = @INSTALL_BIN@/ragraph
+
+all: $(PROGS)
+
+@INSTALL_BIN@/ragraph: ragraph.pl
+	sed 's+@BINDIR@+$(DESTDIR)$(BINDIR)+' ragraph.pl > $@
+	chmod +x $@
+
+CLEANFILES = $(PROGS)
+
+install: force all
+	[ -d $(DESTDIR)$(BINDIR) ] || \
+		(mkdir -p $(DESTDIR)$(BINDIR); chmod 755 $(DESTDIR)$(BINDIR))
+	$(INSTALL) @INSTALL_BIN@/ragraph $(DESTDIR)$(BINDIR)
+
+clean:
+	rm -f $(CLEANFILES)
+
+distclean:
+	rm -f $(CLEANFILES) Makefile
+
+tags: $(TAGFILES)
+	ctags -wtd $(TAGFILES)
+
+force: /tmp
+depend: force
+	touch Makefile

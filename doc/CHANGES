@@ -1,0 +1,69 @@
+
+Whats the different between 2.0 and 3.0?
+
+Argus Architecture
+   1.0  Concept of Operation
+      The basic concept of operation for argus has not changed.  You can read
+      packets from files, or off the wire to generate argus flow records, which
+      can be stored in files, or transported via sockets to consumer programs.
+      
+      Specifics have changed, generally to extend functionality or to make things
+      either easier, or a bit more complicated ;o)
+
+      Argus can read multiple input files at a time, it can read packets from
+      stdin, and it supports reading multiple interfaces at a time with a bit
+      more control over its operation.
+
+   1.1  Configuration
+      The basic method of configuration is the same. /etc/argus.conf is the
+      preferred method, and there are new variables available to configure
+      new options or modes of operation.
+
+   1.2  Security
+      Strong mandatory access control and confidentiality protection on the wire
+      is provided by the newest SASL implementations.
+
+      We still support tcp_wrappers control of who can have access to argus data.
+
+   1.3  64-bit Architecture Support
+      Argus now support 64-bit architectures, which means it also can generate
+      64-bit counters for data in aggregation.  Actually we support 128-bit
+      counters, but the big deal is that we can do that because we're now 64-bit.
+
+   1.4  Record Format
+      The argus-3.0 data record has changed considerably.  About every field
+      that was supported in argus-2.0 data was extended to allow for different
+      formats, bigger data types (64-bit counters, IPv6 addresses) and support
+      for some type of transport and storage compression was added.
+
+      As a result, Argus-3.0 data is not compatible with argus-2.0.
+
+      Upgrading/migrating to argus-3.0 is/can be relatively painless, however,
+      as all argus-3.0 programs are backward compatible.  All the various data
+      manipulation and management strategies are supported in argus-3.0.
+
+   1.5  More Protocols
+      Argus now supports flow models for IPv6, MPLS, VLANS and any number of
+      encapsulations that maybe in a packet in any order.  This is a big change.
+
+   1.6  More Metrics
+      Argus now supports many new classes of metrics, such as packet size reporting
+      improved floating point transport (using XDR) for interpacket arrival and
+      jitter reporting, multiple timestamps to remove issues with not enough
+      timestamps ;o)
+
+   1.7  Better Performance
+      Argus-3.0 has been measured to monitor 1.7 Mpps on commodity PC's, using
+      commercial packet capture cards, and we have ported this version of argus
+      to 64+ core architectures.
+
+
+To get all these changes in, we made a lot of changes to the data record structure,
+and to the services that the core library supports for client programs.
+
+If you have written your own argus client/reader programs, and did not use the
+core library, you will have to start over again, as your program will not work.
+
+Pleaes contact argus@qosient.com, if you need assistance in porting your application
+to argus-3.0.
+

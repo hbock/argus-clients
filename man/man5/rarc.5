@@ -1,0 +1,283 @@
+.\" Copyright (c) 2000-2008 QoSient, LLC
+.\" All rights reserved.
+.\" 
+.\" This program is free software; you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation; either version 2, or (at your option)
+.\" any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program; if not, write to the Free Software
+.\" Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+.\"
+.TH RARC 1 "07 November 2000"
+.SH NAME
+\fBrarc\fP \- \fBra\fP client resource file.
+.SH SYNOPSIS
+.B rarc
+.SH COPYRIGHT
+Copyright (c) 2000-2008 QoSient. All rights reserved.
+.SH DESCRIPTION
+Ra* clients will open this file if its in the users $HOME directory,
+or in the $ARGUSHOME directory, and parse it to set common configuration
+options.  All of these values will be overriden by options set on the
+command line, or in the file specified using the '-F conffile' option.
+
+Values can be quoted to make string denotation easier, however, the
+parser does not require that string values be quoted.  To support this,
+the parse will remove " (double quote) characters from input strings, so
+do not use this character in strings themselves.
+
+Values specified as "" will be treated as a NULL string, and the parser
+will ignore the variable setting.
+
+.SH RA_ARGUS_SERVER
+All ra* clients can attach to a remote server, and collect argus data
+in real time.  This variable can be a name or a dot notation IP address.
+Optionally you can specify a port number using a ':' and then providing
+the port number desired.
+
+\fBRA_ARGUS_SERVER=\fPlocalhost:561
+
+.SH RA_CISCONETFLOW_PORT
+
+All ra* clients can read Cisco Netflow records directly from Cisco
+routers.  Specifying this value will alert the ra* client to open
+a UDP based socket listening for Cisco Netflow data on the port
+number specified.
+
+\fBRA_CISCONETFLOW_PORT=\fP
+
+
+.SH RA_OUTPUT_FILE
+All ra* clients can support writing output as Argus Records into
+a file or stdout.  Stdout is specified as '-'.
+
+\fBRA_OUTPUT_FILE=\fp"filename"
+
+.SH RA_TIMERANGE
+All ra* clients can support input filtering on a time range. The
+format is:
+.nf
+     \fBtimeSpecification[-timeSpecification]\fP
+
+where the format of a timeSpecification can be:
+     [[[yy/]mm/]dd.]hh[:mm[:ss]]
+     [yy/]mm/dd
+
+\fBRA_TIMERANGE=\fP"55/12/04.00:00:01-55/12/04.23:59:59"
+\fBRA_TIMERANGE=\fP"12/04-12/05"
+.fi
+
+
+.SH RA_RUN_TIME
+
+All ra* clients can support running for a number of seconds,
+while attached to a remote source of argus data.  This is a type
+of polling.  The default is zero (0), which means run indefinately.
+
+\fBRA_RUN_TIME\fP=0
+
+
+.SH RA_PRINT_LABELS
+
+Most ra* clients are designed to print argus records out in ASCII,
+with each client supporting its own output formats.  For ra() like
+clients, this variable will generate column headers as labels.
+The number is the number of lines between repeated header labeling.
+Setting this value to zero (0) will cause the labels to be printed
+once.  If you don't want labels,  comment this line out, delete it
+or set the value to -1.
+
+\fBRA_PRINT_LABELS\fP=0
+
+
+.SH RA_FIELD_DELIMITER
+
+Most ra* clients are designed to print argus records out in ASCII,
+with each client supporting its own output formats.  For ra() like
+clients, this variable can overide the default field delimiter,
+which are variable spans of space (' '), to be any character.
+The most common are expected to be '\t' for tabs, and ',' for
+comma separated fields.
+
+\fBRA_FIELD_DELIMITER=\fP','
+
+
+.SH RA_PRINT_NAMES
+
+For \fBra(1)\fP like clients, this variable will control the
+translation of various numbers to names, such as address hostnames, 
+port service names and/or protocol names.  There can be a huge
+performance impact with name lookup, so the default is to not
+resolve hostnames.
+
+\fBRA_PRINT_NAMES=\fPport
+
+Other valid options are \fPnone\fP to print no names, \fPproto\fP
+to translate the protocol names, \fPport\fP to translate 
+port names, and \fPall\fP to translate all the fields.  An
+invalid option will default to \fPport\fP, silently.
+
+.SH RA_PRINT_RESPONSE_DATA
+
+For ra() like clients, this variable will include the response
+data that is provided by Argus.  This is protocol and state
+specific.
+
+\fBRA_PRINT_RESPONSE_DATA=\fPno
+
+.SH RA_PRINT_UNIX_TIME
+
+For ra() like clients, this variable will force the timestamp
+to be in Unix time format, which is an integer representing the
+number of elapsed seconds since the epoch.
+
+\fBRA_PRINT_UNIX_TIME\fP=no
+
+
+.SH RA_TIME_FORMAT
+
+For ra() like clients, the format that is used to print
+timestamps, is based on the strftime() library call, with
+an extension to print fractions of a sec using "%f".  The
+default is "%T.%f".  You can overide this default time
+format by setting this variable.  This string must conform
+to the format specified in strftime().  Malformed strings can
+generate interesting output, so be aware with this one, and
+don't forget the '.' when doing fractions of a second.
+
+\fBRA_TIME_FORMAT=\fP"%T.%f"
+
+
+.SH RA_TZ
+
+The timezone used for timestamps is specified by the
+tzset() library routines, and is normally specified by
+factors such as the TZ environment variable found on
+most machines.  You can override the TZ environment variable
+by specifying a time zone using this variable.  The format
+of this string must conform to the format specified by
+tzset(3).
+
+.nf
+\fBRA_TZ=\fP"EST5EDT4,M3.2.0/02,M11.1.0/02"
+\fBRA_TZ=\fP"PST8PDT"
+.fi
+
+
+.SH RA_USEC_PRECISION
+
+For ra() like clients, this variable is used to override the
+time format of the timestamp.  This variable specifies the
+number of decimal places that will be printed as the fractional
+part of the time.  Argus collects usec precision, and so a
+maximum value of 6 is supported.  To not print the fractional
+part, specify the value zero (0).
+
+\fBRA_USEC_PRECISION=\fP6
+
+
+.SH RA_USERDATA_ENCODE
+
+Argus can capture user data.  When printing out the user data
+contents, using tools such as raxml(), the type of encoding
+can be specified here. Supported values are "Ascii", or "Encode64".
+
+\fBRA_USERDATA_ENCODE=\fPAscii
+
+.SH RA_DEBUG_LEVEL
+
+If compiled to support this option, ra* clients are capable
+of generating a lot of use [full | less | whatever] debug
+information.  The default value is zero (0).
+
+\fBRA_DEBUG_LEVEL=\fP0
+
+.SH RA_FILTER
+
+You can provide a filter expression here, if you like.
+It should be limited to 2K in length.  The default is to
+not filter.  See ra(1) for the format of the filter expression.
+
+\fBRA_FILTER=\fP""
+
+.SH SASL SUPPPORT
+When argus is compiled with SASL support, ra* clients may be
+required to authenticate to the argus server before the argus
+will accept the connection.  This variable will allow one to
+set the user and authorization id's, if needed.  Although
+not the best practice, you can provide a password through the
+RA_AUTH_PASS variable.  If you do this, you should protect
+the contents of this file.  The format for this variable is:
+ 
+.nf
+\fBRA_USER_AUTH=\fP"user_id/authorization_id"
+\fBRA_AUTH_PASS=\fP"password"
+.fi
+
+
+The clients can specify a part of the negotiation of the
+security policy that argus uses. This is controlled through
+the use of a minimum and maximum allowable protection
+strength values.  Set these variable to control this policy.
+
+.nf
+\fBRA_MIN_SSF=\fP0
+\fBRA_MAX_SSF=\fP128
+.fi
+
+
+If compiled to support this option, ra* clients are capable
+of generating a lot of use [full | less | whatever] debug
+information.  The default value is zero (0).
+
+.nf
+\fBRA_DEBUG_LEVEL=\fP0
+.fi
+
+
+Some ra style clients use a non-blocking method to connect to
+remote data sources, so the user many need to control how long
+to wait if a remote source doesn't respond.  This variable sets
+the number of seconds to wait.  This number should be set to
+a reasonable value (5 < value < 60).  The default value is
+10 seconds.
+
+.nf
+\fBRA_CONNECT_TIME=\fP10
+.fi
+
+
+Some ra* clients have an interval based function.  Ratop, as an
+example, can refresh the screen at a fixed interval.  This variable
+can be set using the RA_UPDATE_INTERVAL variable, which is a
+float in seconds.  0.5 seconds is the default.
+
+.nf
+\fBRA_UPDATE_INTERVAL=\fP0.5
+.fi
+
+
+All ra* clients have the ability to print country codes for the
+IP addresses that are in a flow record.  Country codes are
+generated from the ARIN delegated address space files.  Specify
+the location of your DELEGATED_IP file here.
+
+No Commandline equivalent
+
+.nf
+\fBRA_DELEGATED_IP=\fP"/usr/local/argus/delegated-ipv4-latest"
+.fi
+
+
+.RE
+.SH SEE ALSO
+.BR ra (1)
+
+

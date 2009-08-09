@@ -1,0 +1,204 @@
+.\" Copyright (c) 2000-2008 QoSient, LLC
+.\" All rights reserved.
+.\" 
+.\" This program is free software; you can redistribute it and/or modify
+.\" it under the terms of the GNU General Public License as published by
+.\" the Free Software Foundation; either version 2, or (at your option)
+.\" any later version.
+.\"
+.\" This program is distributed in the hope that it will be useful,
+.\" but WITHOUT ANY WARRANTY; without even the implied warranty of
+.\" MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+.\" GNU General Public License for more details.
+.\"
+.\" You should have received a copy of the GNU General Public License
+.\" along with this program; if not, write to the Free Software
+.\" Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+.\"
+.TH RABINS 1 "12 August 2003" "rabins (argusclients) 3.0.0"
+.SH NAME
+\fBrabins\fP \- split \fBargus(8)\fP data.
+.SH SYNOPSIS
+.B rabins
+\fB\-M\fP \fIsplitmode\fP [\fIsplitmode options\fP]] [\fBraoptions\fP]
+.SH DESCRIPTION
+.IX  "rabins command"  ""  "\fBrabins\fP \(em argus data"
+.LP
+\fBRabins\fP reads
+.BR argus
+data from an \fIargus-data\fP source, and adjusts the data so that
+it is aligned to a set of bins, or slots.  The resulting
+output is split, modified, and optionally aggregated so that
+the data fits to the constraints of the specified bins.  \fBrabins\fP
+is designed to be a combination of \fBrasplit\fP and \fBracluster\fP.
+
+The principal function of rabins is to align data on a time series.
+This is critical for real-time stream block processing, graphing,
+comparing, analyzing, and correlating argus data.  But rabins() also
+supports bin'ing for a fixed number of argus data records ('count'),
+or a fixed volume of data ('size').  While these two last options are
+very useful, they are rather esoteric.  See the online examples and
+rasplit.1 for examples of using these modes of operation.
+
+.SH Time Series Bins
+Time series bin'ing is specified using the \fB-M\fP \fItime\fP option.
+Time bins are specified by the size and granularity of the time bin.
+The granularity, such as 'd' for days, dictates where the bin boundaries
+lie (in this case, the boundary starts at the beginning of each day).
+
+Programatically, each bin gets its own complete racluster.1 function,
+
+
+Records that span a time boundary are split, so that the data represents
+that fraction that resides in the bin, with the metrics adjusted
+in a uniformly distributed fashion. The result is a series
+of data and/or fragments that are time aligned, and is
+appropriate for time seried analysis, and visualization.
+
+When a record is split to conform to a time series bin,
+either the starting or ending timestamps can fall within
+a specified time boundary.  In some applications, it is
+desired that the timestamps conform to the time bin boundaries,
+however in some applications having the exact times is
+critical to retain transaction duration and burst behavior.
+Rabins supports the optional \fBhard\fP option to specify that
+timestamps should conform to 'hard' boundaries, forcing
+\fBrabins\fP to modify the start and stop timestamps in records
+to the time series slot boundaries. One of the results of this
+is that all durations in the reported records will be the slot
+duration.  This is extremely important when printing certain
+metrics, like average load.
+
+The output files name consists of a prefix, which is specified using
+the \fI-w\fP \fIra option\fP, and for all modes except \fBtime\fP mode,
+a suffix, which is created for each resulting file.  If no prefix is
+provided, then \fBrabins\fP will use 'x' as the default prefix.  The suffix
+that is used is determined by the mode of operation.  When \fBrabins\fP
+is using the default count mode or the size mode, the suffix is a group
+of letters 'aa', 'ab', and so on, such that concatenating the output files
+in sorted order by file name produces the original input file.  If
+\fBrabins\fP will need to create more output files than are allowed
+by the default suffix strategy, more letters will be added, in order
+to accomodate the needed files.
+
+When \fBrabins\fP is spliting based on time, \fBrabins\fP uses a default
+extension of %Y.%m.%d.%h.%m.%s.  This default can be overrided by adding
+a '%' extension to the name provided using the \fI-w\fP option.
+
+When standard out is specified, using \fI-w -\fP, \fBrabins\fP
+will output a single \fBargus-stream\fP with START and STOP argus management
+records inserted appropriately to indicate where the output is split.
+See \fBargus(8)\fP for more information on output stream formats.
+
+When \fBrabins\fP is spliting on output record count (the default), the
+number of records is specified as an ordinal counter, the default is
+1000 records.  When \fBrabins\fP is spliting based on the maximum output
+file size, the size is specified as bytes.  The scale of the bytes can be
+specified by appending 'b', 'k' and 'm' to the number provided.
+
+When \fBrabins\fP is spliting base on time, the time period is specified
+with the option, and can be any period based in seconds (s), minutes (m),
+hours (h), days (d), weeks (w), months (M) or years (y).  \fBRabins\fP
+will create and modify records as required to split on prescribed time
+boundaries.  If any record spans a time boundary, the record is split
+and the metrics are adjusted using a uniform distribution model to
+distribute the statistics between the two records.
+
+.SH RABINS SPECIFIC OPTIONS
+Rabins, like all ra based clients, supports
+a number of \fBra options\fP including remote data access, reading
+from multiple files and filtering of input argus records through a
+terminating filter expression. 
+\fBrabins(1)\fP specific options are:
+.TP 4 4
+.BI \-a "\| suffix length\^"
+default is 2 characters.
+.TP 4 4
+.BI \-M "\| splitmode\^"
+Supported spliting modes are:
+.nf
+   \fB     time <period>\fP
+   \fB     count <n[kmb]\fP
+   \fB     size <n[kmb]>\fP
+   \fB     soft\fP
+   \fB     nomodify\fP
+.fi
+.TP 4 4
+.BI \-m "\| aggregation object\^"
+Supported aggregation objects are:
+.nf
+   \fB       none - use a null flow key.\fP
+   \fB      srcid - argus source identifier.\fP
+   \fB       smac - source mac(ether) addr.\fP
+   \fB       dmac - destination mac(ether) addr.\fP
+   \fB smpls[ind] - source mpls label\fP
+   \fB dmpls[ind] - destination mpls label\fP
+   \fB      svlan - source vlan label.\fP
+   \fB      dvlan - destination vlan label.\fP
+   \fB      saddr - source IP addr.\fP
+   \fB      daddr - destination IP addr.\fP
+   \fB      proto - transaction protocol.\fP
+   \fB      sport - source sap.\fP
+   \fB      dport - destination sap.\fP
+   \fB       stos - source TOS byte value.\fP
+   \fB       dtos - destination TOS value.\fP
+   \fB       sttl - source TTL value.\fP
+   \fB       dttl - destination TTL value.\fP
+   \fB      stcpb - source TCP base seq number.\fP
+   \fB      dtcpb - destination TCP base seq number.\fP
+.fi
+.TP 4 4
+.BI \-w "\| filename\^"
+\fBRabins\fP supports an extended \fI-w\fP option that allows for
+output record contents to be inserted into the output filename.
+Specified using '$' (dollar) notation, any printable field can be used.
+Care should be taken to honor any shell escape requirements when
+specifying on the command line.  See \fBra(1)\fP for the list of
+printable fields.
+
+Another extended feature, when using \fBtime\fP mode, \fBrabins\fP
+will process the supplied filename using \fBstrftime(3)\fP, so that
+time fields can be inserted into the resulting output filename.
+
+.SH INVOCATION
+This invocation reads \fBargus(8)\fP data from \fBinputfile\fP and splits
+the \fBargus(8)\fP data stream based on output file size of no greater
+than 1 Megabyte.  The resulting output files have a prefix of \fIargus.\fP
+and suffix that starts with 'aa'. 
+.nf
+ 
+   \fBrabins\fP -r argusfile -M soft time 1m -s +1dur -m proto - ip
+ 
+.fi
+
+This invocation splits \fBinputfile\fP based on hard 10 minute time boundaries.
+The resulting output files are created with a prefix of \fI/archive/%Y/%m/%d/argus.\fP
+and the suffixes \fI%H.%M.%S\fP.  The values will be supplied based on the time in
+the record being written out.
+.nf
+  
+   \fBrabins\fP -r * -M time 10m -w "/archive/%Y/%m/%d/argus.%H.%M.%S"
+ 
+.fi
+
+This invocation splits \fBinputfile\fP based on the argus source identifier.
+The resulting output files are created with a prefix of \fI/archive/Source Identifier/argus.\fP
+and the default suffix starting with  "aa".  The source identifier will be
+supplied based on the contents of the record being exported.
+.nf
+  
+   \fBrabins\fP -r * -M time 10m -w "/archive/\\$srcid/argus."
+ 
+.fi
+.SH COPYRIGHT
+Copyright (c) 2000-2008 QoSient. All rights reserved.
+
+.SH SEE ALSO
+.BR ra(1),
+.BR rarc(5),
+.BR argus(8),
+
+.SH AUTHORS
+.nf
+Carter Bullard (carter@qosient.com).
+.fi
