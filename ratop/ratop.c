@@ -429,7 +429,9 @@ ArgusClientInit (struct ArgusParserStruct *parser)
                   }
                } else
                if (!(strncasecmp (mode->mode, "nocurses", 4))) {
+#if defined(ARGUS_CURSES)
                  ArgusCursesEnabled = 0;
+#endif
                } else
                if (!(strncasecmp (mode->mode, "rmon", 4))) {
                   parser->RaMonMode++;
@@ -737,8 +739,10 @@ RaParseComplete (int sig)
 void
 RaResizeHandler (int sig)
 {
+#if defined(ARGUS_CURSES)
    RaScreenResize = TRUE;
-
+#endif
+   
 #ifdef ARGUSDEBUG 
    ArgusDebug (1, "RaResizeHandler(%d)\n", sig);
 #endif
