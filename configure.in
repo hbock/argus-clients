@@ -8,7 +8,10 @@ dnl all our local stuff like install scripts and include files
 dnl is in there
 AC_CONFIG_AUX_DIR(config)
 
-AC_CANONICAL_SYSTEM
+dnl Include Argus-specific tests and macros.
+AC_CONFIG_MACRO_DIR([m4])
+
+AC_CANONICAL_TARGET
 
 AC_LBL_C_INIT(V_CCOPT, V_INCLS)
 AC_C_INLINE
@@ -17,11 +20,14 @@ dnl where we install our stuff ...
 AC_PREFIX_DEFAULT( /usr/local )
 
 dnl Minimum Autoconf version required.
-AC_PREREQ(2.13)
+AC_PREREQ(2.61)
+LT_PREREQ([2.2.4])
 
 AC_PROG_CC
 AC_PROG_CPP
-AC_PROG_RANLIB
+
+LT_INIT
+AC_SUBST([LIBTOOL_DEPS])
 
 AC_QOSIENT_LEX_AND_YACC(V_LEX, V_YACC, argus_)
 
@@ -324,6 +330,7 @@ AC_OUTPUT(
    ./radium/Makefile
    ./radump/Makefile
    ./ramysql/Makefile
+   ./periscope/Makefile
 )
 
 if test -f .devel ; then

@@ -42,6 +42,8 @@ MANDEST = @mandir@
 srcdir = @srcdir@
 VPATH = @srcdir@
 
+COMPATLIB = @COMPATLIB@ @LIB_SASL@ @LIBS@ @V_THREADS@ @V_GEOIPDEP@
+
 #
 # You shouldn't need to edit anything below.
 #
@@ -54,6 +56,7 @@ DEFS = @DEFS@ -DARGUS_SYSLOG
 # Standard CFLAGS
 CFLAGS = $(CCOPT) $(INCLS) $(DEFS)
 
+LIBTOOL = @LIBTOOL@
 INSTALL = @INSTALL@
 RANLIB = @V_RANLIB@
 
@@ -72,6 +75,11 @@ YACC = @V_YACC@
 	@rm -f $@
 	$(CC) $(CFLAGS) -c $(srcdir)/$*.c
 
+# libtool compilation
+%.lo : %.c
+	@rm -f $@
+	libtool --mode=compile $(CC) $(CFLAGS) -c $(srcdir)/$<
+
 # We would like to say "OBJ = $(SRC:.c=.o)" but Ultrix's make cannot
 # hack the extra indirection
 
@@ -87,43 +95,49 @@ TAGHDR = bpf/net/bpf.h
 TAGFILES = $(SRC) $(HDR) $(TAGHDR)
 
 LIBS = @INSTALL_LIB@/argus_parse.a @INSTALL_LIB@/argus_common.a @INSTALL_LIB@/argus_client.a @INSTALL_LIB@/argus_event.a
+SOLIBS = @INSTALL_LIB@/libargus_client.la
 
 OBJ =	$(COMMONOBJ) $(PARSEOBJ) $(CLIENTOBJ) $(EVENTOBJ)
 CLEANFILES = $(LIBS) $(OBJ) $(GENSRC) $(GENHDR) $(VSRC) lex.yy.c 
 
 
 COMMONSRC = argus_code.c argus_filter.c argus_util.c argus_auth.c argus_parser.c $(GENSRC) $(VSRC)
-COMMONOBJ = argus_code.o argus_filter.o argus_util.o argus_auth.o argus_parser.o scanner.o grammar.o version.o
+COMMONOBJ = argus_code.lo argus_filter.lo argus_util.lo argus_auth.lo argus_parser.lo \
+            scanner.lo grammar.lo version.lo
 
 PARSESRC  = argus_main.c
-PARSEOBJ  = argus_main.o
+PARSEOBJ  = argus_main.lo
 
 CLIENTSRC = argus_client.c argus_label.c argus_grep.c
-CLIENTOBJ = argus_client.o argus_label.o argus_grep.o
+CLIENTOBJ = argus_client.lo argus_label.lo argus_grep.lo
 
 EVENTSRC  = argus_event.c
-EVENTOBJ  = argus_event.o
+EVENTOBJ  = argus_event.lo
 
 
 SRC = $(COMMONSRC) $(PARSESRC) $(CLIENTSRC) $(EVENTSRC)
 
-all: $(LIBS)
+all: $(LIBS) $(SOLIBS)
+
+@INSTALL_LIB@/libargus_common.la: $(COMMONOBJ) $(CLIENTOBJ)
+	rm -f $@
+	libtool --mode=link $(CC) $(CCOPT) -o $@ -rpath $(DESTDIR)$(LIBDEST) $(COMMONOBJ) $(CLIENTOBJ) $(COMPATLIB)
 
 @INSTALL_LIB@/argus_common.a: $(COMMONOBJ)
-	rm -f $@; ar qc $@ $(COMMONOBJ)
-	-$(RANLIB) $@
+	rm -f $@
+	libtool --mode=link $(CC) $(CCOPT) -o $@ $(COMMONOBJ)
 
 @INSTALL_LIB@/argus_parse.a: $(PARSEOBJ)
-	rm -f $@; ar qc $@ $(PARSEOBJ)
-	-$(RANLIB) $@
+	rm -f $@
+	libtool --mode=link $(CC) $(CCOPT) -o $@ $(PARSEOBJ)
 
 @INSTALL_LIB@/argus_client.a: $(CLIENTOBJ)
-	rm -f $@; ar qc $@ $(CLIENTOBJ)
-	-$(RANLIB) $@
+	rm -f $@
+	libtool --mode=link $(CC) $(CCOPT) -o $@ $(CLIENTOBJ)
 
 @INSTALL_LIB@/argus_event.a: $(EVENTOBJ)
-	rm -f $@; ar qc $@ $(EVENTOBJ)
-	-$(RANLIB) $@
+	rm -f $@
+	libtool --mode=link $(CC) $(CCOPT) -o $@ $(EVENTOBJ)
 
 scanner.c: scanner.l
 	@rm -f $@
@@ -153,6 +167,7 @@ install: force all
 	$(INSTALL) $(srcdir)/../lib/argus_parse.a  $(DESTDIR)$(LIBDEST)/argus_parse.a
 	$(RANLIB) $(DESTDIR)$(LIBDEST)/argus_common.a
 	$(RANLIB) $(DESTDIR)$(LIBDEST)/argus_parse.a
+	libtool --mode=install $(INSTALL) $(srcdir)/../lib/libargus_client.la $(DESTDIR)$(LIBDEST)/libargus_client.la
 
 clean:
 	rm -f $(CLEANFILES)
