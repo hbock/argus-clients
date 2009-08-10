@@ -7,10 +7,12 @@ periscope/
 libtool
 *.o
 *.lo
-bin/ra*
+*.la
 lib/*.a
+bin/ra*
 radium/radium
 common/grammar.c
 common/scanner.c
 common/version.c
 common/tokdefs.h
+.libs
