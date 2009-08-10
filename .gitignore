@@ -1,1 +1,16 @@
 autom4te.cache
+Makefile
+*~
+config.log
+config.status
+periscope/
+libtool
+*.o
+*.lo
+bin/ra*
+lib/*.a
+radium/radium
+common/grammar.c
+common/scanner.c
+common/version.c
+common/tokdefs.h
