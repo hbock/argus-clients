@@ -43,8 +43,8 @@ docdir = @datadir@/doc/argus-clients-3.0
 
 SHELL = /bin/sh
 
-DIRS = ./common ./clients ./ragraph ./ratop ./radium ./radump @ARGUS_MYSQL@
-INSTDIRS = ./clients ./radium
+DIRS = ./common ./clients ./ragraph ./ratop ./radium ./radump ./periscope @ARGUS_MYSQL@
+INSTDIRS = ./common ./clients ./radium ./periscope
 
 DISTFILES = COPYING CREDITS ChangeLog INSTALL MANIFEST Makefile.in README VERSION \
 	include lib man support aclocal.m4 config configure configure.in .threads \
