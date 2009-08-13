@@ -163,6 +163,7 @@ uninstall:
 	rm -f $(DESTDIR)@bindir@/rastrip
 	rm -f $(DESTDIR)@bindir@/ratop
 	rm -f $(DESTDIR)@bindir@/radium
+	rm -f $(DESTDIR)@bindir@/periscope-test
 	rm -f $(DESTDIR)@mandir@/man1/ra.1
 	rm -f $(DESTDIR)@mandir@/man1/rabins.1
 	rm -f $(DESTDIR)@mandir@/man1/racluster.1
