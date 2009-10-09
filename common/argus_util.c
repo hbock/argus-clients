@@ -41,9 +41,9 @@
  */
 
 /* 
- * $Id: //depot/argus/clients/common/argus_util.c#169 $
- * $DateTime: 2009/07/31 11:50:38 $
- * $Change: 1775 $
+ * $Id: //depot/argus/clients/common/argus_util.c#177 $
+ * $DateTime: 2009/09/13 22:17:09 $
+ * $Change: 1799 $
  */
 
 #define ArgusUtil
@@ -548,11 +548,16 @@ ArgusShutDown (int sig)
             exit(0);
             break;
          }
+
+         case -1:
+            exit(sig);
+            break;
       }
 
       return;
    }
 }
+
 
 void
 ArgusMainInit (struct ArgusParserStruct *parser, int argc, char **argv)
@@ -1022,6 +1027,16 @@ ArgusParseArgs (struct ArgusParserStruct *parser, int argc, char **argv)
                if (ptr == eptr)
                   usage ();
 
+            } else 
+            if ((ptr = strchr (optarg, '+')) != NULL) {
+               char *eptr = ptr + 1;
+               parser->sNflag = strtol(optarg, (char **)&ptr, 10);
+               if (ptr == optarg)
+                  usage ();
+               parser->eNflag = strtol(eptr, (char **)&ptr, 10);
+               if (ptr == eptr)
+                  usage ();
+               parser->eNflag += parser->sNflag;
             } else {
                parser->sNflag = 0;
                parser->eNflag = strtol(optarg, (char **)&ptr, 10);
@@ -1124,6 +1139,7 @@ ArgusParseArgs (struct ArgusParserStruct *parser, int argc, char **argv)
          }
 
          case 's': 
+            parser->sflag = 1;
             do {
                if (parser->RaSOptionIndex < ARGUS_MAX_S_OPTIONS) {
                   char *soptstr = strdup(optarg), *sptr;
@@ -1843,7 +1859,7 @@ RaClearConfiguration (struct ArgusParserStruct *parser)
    parser->ArgusReliableConnection = 1;
    parser->Pflag = 0;
    parser->qflag = 0;
-   parser->sflag = NULL;
+   parser->sflag = 0;
    parser->tflag = 0;
    parser->uflag = 0;
    parser->Wflag = 0;
@@ -2021,21 +2037,21 @@ ArgusHandleDatum (struct ArgusParserStruct *parser, struct ArgusInput *input, st
 
                if (parser->ArgusGrepSource || parser->ArgusGrepDestination)
                   if (ArgusGrepUserData(parser, argus) == 0)
-                     return (0);
+                     return (argus->hdr.len * 4);
 
                if (parser->ArgusMatchLabel) {
                   struct ArgusLabelStruct *label;
                   if (((label = (void *)argus->dsrs[ARGUS_LABEL_INDEX]) != NULL)) {
                      if (regexec(&parser->lpreg, label->l_un.label, 0, NULL, 0))
-                        return (0);
+                        return (argus->hdr.len * 4);
                   } else
-                     return (0);
+                     return (argus->hdr.len * 4);
                }
 
                parser->ArgusTotalRecords++;
 
-               if ((parser->sNflag + 1) >= parser->ArgusTotalRecords)
-                  return (0);
+               if (parser->sNflag && (parser->sNflag >= parser->ArgusTotalRecords))
+                  return (argus->hdr.len * 4);
 
                if ((retn = ArgusCheckTime (parser, argus)) != 0) {
                   if (parser->ArgusWfileList != NULL) {
@@ -2128,16 +2144,19 @@ ArgusHandleDatum (struct ArgusParserStruct *parser, struct ArgusInput *input, st
                }
             }
          } else
-            retn = 1;
+            retn = -1;
 
-         if ((parser->eNflag - parser->sNflag) > 0)
-            if (--parser->eNflag == parser->sNflag) {
+         if ((parser->eNflag >= 0) && ((parser->eNflag - parser->sNflag) >= 0))
+            if (--parser->eNflag < parser->sNflag) {
                parser->RaParseDone++;
-               retn = 1;
+               retn = -1;
             }
 
          if (parser->RaPollMode)
-            retn = 1;
+            retn = -1;
+
+         if (retn != -1)
+            retn = argus->hdr.len * 4;
       }
    }
 
@@ -2738,7 +2757,6 @@ ArgusIndexRecord (struct ArgusRecordStruct *argus)
 }
 
 
-char *ArgusVersionStr =  "Argus Version ";
 
 int
 ArgusConvertInitialWriteStruct (struct WriteStruct *ws, struct ArgusRecordStruct *argus)
@@ -2791,9 +2809,9 @@ ArgusPrintXmlSortAlgorithms(struct ArgusParserStruct *parser)
             case ARGUSPRINTLASTDATE:			dtime++; break;
             case ARGUSPRINTTRANSACTIONS:		agg++; break;
             case ARGUSPRINTDURATION:			dtime++; break;
-            case ARGUSPRINTAVGDURATION:			agg++; break;
-            case ARGUSPRINTMINDURATION:			agg++; break;
-            case ARGUSPRINTMAXDURATION:			agg++; break;
+            case ARGUSPRINTMEAN:			agg++; break;
+            case ARGUSPRINTMIN:				agg++; break;
+            case ARGUSPRINTMAX:				agg++; break;
             case ARGUSPRINTSRCADDR:			flow++; break;
             case ARGUSPRINTDSTADDR:			flow++; break;
             case ARGUSPRINTPROTO:			flow++; break;
@@ -2924,12 +2942,50 @@ ArgusPrintXmlSortAlgorithms(struct ArgusParserStruct *parser)
    }
 }
 
+void ArgusPrintRecordHeader (struct ArgusParserStruct *, char *, struct ArgusRecordStruct *);
+void ArgusPrintRecordCloser (struct ArgusParserStruct *, char *, struct ArgusRecordStruct *);
 
 int ArgusParseInited = 0;
+
+/* 2009-10-09 Harry Bock <hbock@ele.uri.edu>
+ * Moved from argus_int.h ; only used here, fixes undefined references errors
+ * when linking against libargus_client.so. */
+struct ArgusInterfaceStruct ArgusInterfaceTypes [] = {
+{  0, "DLT_NULL", "no link-layer encapsulation"},
+{  1, "DLT_EN10MB", "Ethernet (10Mb)"},
+{  2, "DLT_EN3MB", "Experimental Ethernet (3Mb)"},
+{  3, "DLT_AX25", "Amateur Radio AX.25"},
+{  4, "DLT_PRONET", "Proteon ProNET Token Ring"},
+{  5, "DLT_CHAOS", "Chaos"},
+{  6, "DLT_IEEE802", "IEEE 802 Networks"},
+{  7, "DLT_ARCNET", "ARCNET"},
+{  8, "DLT_SLIP", "Serial Line IP"},
+{  9, "DLT_PPP",  "Point-to-point Protocol"},
+{ 10,"DLT_FDDI", "FDDI"},
+{ 11, "DLT_ATM_RFC1483", "LLC/SNAP encapsulated atm"},
+{ 12, "DLT_LOOP", "loopback"},
+{ 13, "DLT_SLIP_BSDOS", "BSD/OS Serial Line IP"},
+{ 14, "DLT_PPP_BSDOS", "BSD/OS Point-to-point"},
+{ 15, "DLT_SLIP_BSDOS", "BSD/OS Serial Line IP"},
+{ 16, "DLT_PPP_BSDOS", "BSD/OS Point-to-point"},
+{ 19, "DLT_ATM_CLIP", "Linux Classical-IP over ATM"},
+{ 50, "DLT_PPP_SERIAL", "PPP over Serial with HDLC"},
+{ 51, "DLT_PPP_ETHER", "PPP over Ethernet"},
+
+{100, "DLT_ATM_RFC1483", "LLC/SNAP encapsulated atm"},
+{101, "DLT_RAW", "raw IP"},
+{102, "DLT_SLIP_BSDOS", "BSD/OS Serial Line IP"},
+{103, "DLT_PPP_BSDOS", "BSD/OS Point-to-point Protocol"},
+{104, "DLT_CHDLC", "Cisco HDLC"},
+{105, "DLT_IEEE802_11", "IEE 802.11 wireless"},
+{-1, "Undefined", "Undefined"},
+};
 
 void
 ArgusPrintRecord (struct ArgusParserStruct *parser, char *buf, struct ArgusRecordStruct *argus, int len)
 {
+   struct ArgusInput *input = argus->input;
+   char *timeFormat = parser->RaTimeFormat;
    char tbuf[0x10000], *tptr;
    extern char version[];
 
@@ -2948,19 +3004,56 @@ ArgusPrintRecord (struct ArgusParserStruct *parser, char *buf, struct ArgusRecor
 
    if (parser->ArgusPrintXml) {
       if (parser->RaXMLStarted == 0) {
-         sprintf(buf, "<?xml version =\"1.0\"?>\n");
-         sprintf(&buf[strlen(buf)], "<!--Generated by raxml(%s) QoSient, LLC-->\n", version);
+         struct ArgusRecord *rec = (struct ArgusRecord *) &input->ArgusManStart;
+         struct ArgusInterfaceStruct *interface = &ArgusInterfaceTypes[0];
+
+         char StartDateBuf[64], CurrentDateBuf[64];
+         char ArgusSourceId[64];
+         struct timeval tvpbuf, *tvp = &tvpbuf;
+
+         parser->RaTimeFormat="%Y-%m-%dT%H:%M:%S.%f";
+
+         bzero(StartDateBuf, sizeof(StartDateBuf));
+         bzero(CurrentDateBuf, sizeof(CurrentDateBuf));
+         bzero(ArgusSourceId, sizeof(ArgusSourceId));
+
+         tvp->tv_sec  = rec->argus_mar.startime.tv_sec;
+         tvp->tv_usec = rec->argus_mar.startime.tv_usec;
+
+         ArgusPrintTime(parser, StartDateBuf, tvp);
+	      
+         tvp->tv_sec  = rec->argus_mar.now.tv_sec;
+         tvp->tv_usec = rec->argus_mar.now.tv_usec;
+
+         ArgusPrintTime(parser, CurrentDateBuf, tvp);
+
+         sprintf(buf, "<?xml version =\"1.0\" encoding=\"UTF-8\"?>\n");
+         sprintf(&buf[strlen(buf)], "<!--Generated by %s(%s) QoSient, LLC-->\n", parser->ArgusProgramName, version);
          sprintf(&buf[strlen(buf)], "<ArgusDataStream");
          sprintf(&buf[strlen(buf)], "\n  xmlns:xsi = \"http://www.w3.org/2001/XMLSchema-instance\" ");
-         sprintf(&buf[strlen(buf)], "\n  xsi:noNamespaceSchemaLocation = \"http://qosient.com/argus/Xml/ArgusRecord.xsd\"");
-         sprintf(&buf[strlen(buf)], ">\n\n");
+         sprintf(&buf[strlen(buf)], "\n  xsi:noNamespaceSchemaLocation = \"http://qosient.com/argus/Xml/ArgusRecord.3.0.xsd\"");
+         sprintf(&buf[strlen(buf)], "\n  BeginDate = \"%s\" CurrentDate = \"%s\"", StartDateBuf, CurrentDateBuf);
+         sprintf(&buf[strlen(buf)], "\n  MajorVersion = \"%d\" MinorVersion = \"%d.%d\" ", input->major_version, input->minor_version, argus->hdr.type & 0x0F);
 
+         while (interface->value >= 0) {
+            if (rec->argus_mar.interfaceType == interface->value)
+               break;
+            interface++;
+         }
+
+         sprintf(&buf[strlen(buf)], "InterfaceType = \"%s\" InterfaceStatus = \"%s\"\n ", interface->label, "Up");
+         
+         ArgusPrintSourceID (parser, ArgusSourceId, argus, 32);
+
+         sprintf(&buf[strlen(buf)], " Argus%s ", &ArgusSourceId[1]);
+         sprintf(&buf[strlen(buf)], " NetAddr = \"%s\" ", ipaddr_string(&input->ArgusLocalNet));
+         sprintf(&buf[strlen(buf)], " NetMask = \"%s\">\n\n", ipaddr_string(&input->ArgusNetMask));
 
          ArgusPrintXmlSortAlgorithms(parser);
          parser->RaXMLStarted++;
       }
 
-      sprintf(&buf[strlen(buf)], " <ArgusRecord ");
+      ArgusPrintRecordHeader (parser, &buf[strlen(buf)], argus);
    }
 
    for (parser->RaPrintIndex = 0; parser->RaPrintIndex < MAX_PRINT_ALG_TYPES; parser->RaPrintIndex++) {
@@ -3044,29 +3137,24 @@ ArgusPrintRecord (struct ArgusParserStruct *parser, char *buf, struct ArgusRecor
       }
    }
 
-   if (parser->ArgusPrintXml)
-      sprintf(&buf[strlen(buf)], " />");
+   if (parser->ArgusPrintXml) {
+      ArgusPrintRecordCloser (parser, &buf[strlen(buf)], argus);
+      parser->RaTimeFormat = timeFormat;
+   }
 
 #ifdef ARGUSDEBUG
    ArgusDebug (10, "ArgusPrintRecord (0x%x, 0x%x, 0x%x, %d)", parser, buf, argus, len);
 #endif
 }
 
-void ArgusPrintRecordHeader (struct ArgusParserStruct *, char *, struct ArgusRecordStruct *);
 
 void
 ArgusPrintRecordHeader (struct ArgusParserStruct *parser, char *buf, struct ArgusRecordStruct *argus)
 {
    if (parser->ArgusPrintXml) {
       char ArgusTypeBuf[32], *ArgusTypeStr    = ArgusTypeBuf;
-      char ArgusVersBuf[32], *ArgusVersionStr = ArgusVersBuf;
-      char ArgusCausBuf[32], *ArgusCauseStr   = ArgusCausBuf;
-      char ArgusOptsBuf[32], *ArgusOptionsStr = ArgusOptsBuf;
 
       snprintf (ArgusTypeBuf, 32, " ");
-      snprintf (ArgusVersBuf, 32, " ");
-      snprintf (ArgusCausBuf, 32, " ");
-      snprintf (ArgusOptsBuf, 32, " ");
 
       switch (argus->hdr.type & 0xF0) {
          case ARGUS_MAR:     snprintf (ArgusTypeBuf, 32, "Management"); break;
@@ -3075,27 +3163,62 @@ ArgusPrintRecordHeader (struct ArgusParserStruct *parser, char *buf, struct Argu
          case ARGUS_INDEX:   snprintf (ArgusTypeBuf, 32, "Index"); break;
          case ARGUS_DATASUP: snprintf (ArgusTypeBuf, 32, "Supplement"); break;
          case ARGUS_ARCHIVE: snprintf (ArgusTypeBuf, 32, "Archive"); break;
-         default:           snprintf (ArgusTypeBuf, 32, "Unknown"); break;
+         default:            snprintf (ArgusTypeBuf, 32, "Unknown"); break;
       }
 
-      snprintf (ArgusVersBuf, 32, "%d.%d.%d", argus->input->major_version,
-                                              argus->input->minor_version,
-                                              argus->hdr.type & 0x0F);
-
-      switch (argus->hdr.cause & 0xF0) {
-         case ARGUS_START:    ArgusCauseStr = "Start"; break;
-         case ARGUS_STATUS:   ArgusCauseStr = "Status"; break;
-         case ARGUS_STOP:     ArgusCauseStr = "Stop"; break;
-         case ARGUS_SHUTDOWN: ArgusCauseStr = "Shutdown"; break;
-         case ARGUS_TIMEOUT:  ArgusCauseStr = "Timeout"; break;
-         case ARGUS_ERROR:    ArgusCauseStr = "Error"; break;
-         default:             ArgusCauseStr = "Unknown"; break;
-      }
-
-      sprintf(buf, "  Type = \"%s\" Version = \"%s\" Cause = \"%s\" Options = \"%s\" ",
-                    ArgusTypeStr, ArgusVersionStr, ArgusCauseStr, ArgusOptionsStr);
-   } else {
+      sprintf(&buf[strlen(buf)], " <Argus%sRecord ", ArgusTypeStr);
    }
+}
+
+void
+ArgusPrintRecordCloser (struct ArgusParserStruct *parser, char *buf, struct ArgusRecordStruct *argus)
+{
+   if (parser->ArgusPrintXml) {
+      char ArgusTypeBuf[32], *ArgusTypeStr    = ArgusTypeBuf;
+
+      snprintf (ArgusTypeBuf, 32, " ");
+
+      switch (argus->hdr.type & 0xF0) {
+         case ARGUS_MAR:     snprintf (ArgusTypeBuf, 32, "Management"); break;
+         case ARGUS_FAR:     snprintf (ArgusTypeBuf, 32, "Flow"); break;
+         case ARGUS_NETFLOW: snprintf (ArgusTypeBuf, 32, "NetFlow"); break;
+         case ARGUS_INDEX:   snprintf (ArgusTypeBuf, 32, "Index"); break;
+         case ARGUS_DATASUP: snprintf (ArgusTypeBuf, 32, "Supplement"); break;
+         case ARGUS_ARCHIVE: snprintf (ArgusTypeBuf, 32, "Archive"); break;
+         default:            snprintf (ArgusTypeBuf, 32, "Unknown"); break;
+      }
+      sprintf(&buf[strlen(buf)], "></Argus%sRecord>", ArgusTypeStr);
+   }
+}
+
+
+
+void
+ArgusPrintCause (struct ArgusParserStruct *parser, char *buf, struct ArgusRecordStruct *argus, int len)
+{
+   char *ArgusCauseStr = NULL;
+
+   switch (argus->hdr.cause & 0xF0) {
+      case ARGUS_START:    ArgusCauseStr = "Start"; break;
+      case ARGUS_STATUS:   ArgusCauseStr = "Status"; break;
+      case ARGUS_STOP:     ArgusCauseStr = "Stop"; break;
+      case ARGUS_SHUTDOWN: ArgusCauseStr = "Shutdown"; break;
+      case ARGUS_TIMEOUT:  ArgusCauseStr = "Timeout"; break;
+      case ARGUS_ERROR:    ArgusCauseStr = "Error"; break;
+      default:             ArgusCauseStr = "Unknown"; break;
+   }
+
+   if (parser->ArgusPrintXml) {
+      sprintf (buf, " Cause = \"%s\"", ArgusCauseStr);
+   } else {
+      if (parser->RaFieldWidth != RA_FIXED_WIDTH)
+         len = strlen(ArgusCauseStr);
+      sprintf (buf, "%*.*s ", len, len, ArgusCauseStr);
+   }
+
+#ifdef ARGUSDEBUG
+   ArgusDebug (10, "ArgusPrintCause (0x%x, 0x%x, %d)", buf, argus, len);
+#endif
 }
 
 void
@@ -3477,7 +3600,7 @@ RaGetFloatDuration (struct ArgusRecordStruct *argus)
                   st->tv_usec = dtime->src.start.tv_usec;
                   lt->tv_sec  = dtime->dst.start.tv_sec;
                   lt->tv_usec = dtime->dst.start.tv_usec;
-                  *ltime = *RaMinTime(st, lt);
+                  *stime = *RaMinTime(st, lt);
 
                   st->tv_sec  = dtime->src.start.tv_sec;
                   st->tv_usec = dtime->src.start.tv_usec;
@@ -3493,7 +3616,7 @@ RaGetFloatDuration (struct ArgusRecordStruct *argus)
                   st->tv_usec = dtime->src.start.tv_usec;
                   lt->tv_sec  = dtime->dst.start.tv_sec;
                   lt->tv_usec = dtime->dst.start.tv_usec;
-                  *ltime = *RaMinTime(st, lt);
+                  *stime = *RaMinTime(st, lt);
 
                   st->tv_sec  = dtime->dst.start.tv_sec;
                   st->tv_usec = dtime->dst.start.tv_usec;
@@ -3698,7 +3821,7 @@ RaGetFloatDstDuration (struct ArgusRecordStruct *argus)
 
 
 float
-RaGetFloatAvgDuration (struct ArgusRecordStruct *argus)
+RaGetFloatMean (struct ArgusRecordStruct *argus)
 {
    float retn = 0.0;
 
@@ -3707,15 +3830,13 @@ RaGetFloatAvgDuration (struct ArgusRecordStruct *argus)
       struct ArgusAgrStruct *agr;
       if ((agr = (struct ArgusAgrStruct *) argus->dsrs[ARGUS_AGR_INDEX]) != NULL)
          retn = agr->act.meanval;
-      else
-         retn = RaGetFloatDuration (argus);
    }
 
    return (retn);
 }
 
 float
-RaGetFloatMinDuration (struct ArgusRecordStruct *argus)
+RaGetFloatMin (struct ArgusRecordStruct *argus)
 {
    float retn = 0.0;
  
@@ -3724,15 +3845,13 @@ RaGetFloatMinDuration (struct ArgusRecordStruct *argus)
       struct ArgusAgrStruct *agr;
       if ((agr = (struct ArgusAgrStruct *) argus->dsrs[ARGUS_AGR_INDEX]) != NULL)
          retn = agr->act.minval; 
-      else
-         retn = RaGetFloatDuration (argus);
    }
  
    return (retn); 
 }
 
 float
-RaGetFloatMaxDuration (struct ArgusRecordStruct *argus)
+RaGetFloatMax (struct ArgusRecordStruct *argus)
 {
    float retn = 0.0;
  
@@ -3741,8 +3860,6 @@ RaGetFloatMaxDuration (struct ArgusRecordStruct *argus)
       struct ArgusAgrStruct *agr;
       if ((agr = (struct ArgusAgrStruct *) argus->dsrs[ARGUS_AGR_INDEX]) != NULL)
          retn = agr->act.maxval; 
-      else
-         retn = RaGetFloatDuration (argus);
    }
  
    return (retn); 
@@ -3991,9 +4108,9 @@ void ArgusPrintWindow (struct ArgusParserStruct *parser, char *, struct ArgusRec
 void ArgusPrintDuration (struct ArgusParserStruct *parser, char *, struct ArgusRecordStruct *, int);
 void ArgusPrintSrcDuration (struct ArgusParserStruct *parser, char *, struct ArgusRecordStruct *, int);
 void ArgusPrintDstDuration (struct ArgusParserStruct *parser, char *, struct ArgusRecordStruct *, int);
-void ArgusPrintAvgDuration (struct ArgusParserStruct *parser, char *, struct ArgusRecordStruct *, int);
-void ArgusPrintMinDuration (struct ArgusParserStruct *parser, char *, struct ArgusRecordStruct *, int);
-void ArgusPrintMaxDuration (struct ArgusParserStruct *parser, char *, struct ArgusRecordStruct *, int);
+void ArgusPrintMean (struct ArgusParserStruct *parser, char *, struct ArgusRecordStruct *, int);
+void ArgusPrintMin (struct ArgusParserStruct *parser, char *, struct ArgusRecordStruct *, int);
+void ArgusPrintMax (struct ArgusParserStruct *parser, char *, struct ArgusRecordStruct *, int);
 void ArgusPrintStdDeviation (struct ArgusParserStruct *parser, char *, struct ArgusRecordStruct *, int);
 void ArgusPrintStartRange (struct ArgusParserStruct *parser, char *, struct ArgusRecordStruct *, int);
 void ArgusPrintEndRange (struct ArgusParserStruct *parser, char *, struct ArgusRecordStruct *, int);
@@ -4041,63 +4158,55 @@ ArgusPrintTransactions (struct ArgusParserStruct *parser, char *buf, struct Argu
 
 
 void
-ArgusPrintAvgDuration (struct ArgusParserStruct *parser, char *buf, struct ArgusRecordStruct *argus, int len)
+ArgusPrintMean (struct ArgusParserStruct *parser, char *buf, struct ArgusRecordStruct *argus, int len)
 {
    struct ArgusAgrStruct *agr = NULL;
-   char avgdur[32];
+   char avg[32];
  
-   bzero (avgdur, 32);
+   bzero (avg, 32);
    if (argus->hdr.type & ARGUS_MAR) {
    } else {
       if ((agr = (struct ArgusAgrStruct *) argus->dsrs[ARGUS_AGR_INDEX]) != NULL) {
          if (agr->count > 0) {
-            sprintf (avgdur, "%.*f", parser->pflag, agr->act.meanval);
+            sprintf (avg, "%.*f", parser->pflag, agr->act.meanval);
          } else 
-            agr = NULL;
-      }
-      if (agr == NULL) {
-         struct ArgusMetricStruct *metric = (void *)argus->dsrs[ARGUS_METRIC_INDEX];
-         if ((metric != NULL) && ((metric->src.pkts + metric->dst.pkts) > 1))
-            ArgusPrintDuration (parser, avgdur, argus, len);
-         else
-            sprintf (avgdur, "%.*f", parser->pflag, 0.0);
-      }
+            sprintf (avg, "%.*f", parser->pflag, 0.0);
+      } else
+         sprintf (avg, "%.*f", parser->pflag, 0.0);
    }
  
    if (parser->ArgusPrintXml) {
-      sprintf (buf, " AvgDuration = \"%s\"", avgdur);
+      sprintf (buf, " Mean = \"%s\"", avg);
    } else {
       if (parser->RaFieldWidth != RA_FIXED_WIDTH)
-         len = strlen(avgdur);
-      sprintf (buf, "%*.*s ", len, len, avgdur);
+         len = strlen(avg);
+      sprintf (buf, "%*.*s ", len, len, avg);
    }
 
 #ifdef ARGUSDEBUG
-   ArgusDebug (10, "ArgusPrintAvgDuration (0x%x, 0x%x)", buf, argus);
+   ArgusDebug (10, "ArgusPrintMean (0x%x, 0x%x)", buf, argus);
 #endif
 }
 
 void
-ArgusPrintMinDuration (struct ArgusParserStruct *parser, char *buf, struct ArgusRecordStruct *argus, int len)
+ArgusPrintMin (struct ArgusParserStruct *parser, char *buf, struct ArgusRecordStruct *argus, int len)
 {
    struct ArgusAgrStruct *agr = NULL;
-   char mindur[32];
+   char minval[32];
  
-   bzero (mindur, 32);
+   bzero (minval, 32);
    if (argus->hdr.type & ARGUS_MAR) {
    } else {
       if ((agr = (struct ArgusAgrStruct *) argus->dsrs[ARGUS_AGR_INDEX]) != NULL)
-         sprintf (mindur, "%.*f", parser->pflag, agr->act.minval);
-      else
-         ArgusPrintDuration (parser, mindur, argus, len);
+         sprintf (minval, "%.*f", parser->pflag, agr->act.minval);
    }
  
    if (parser->ArgusPrintXml) {
-      sprintf (buf, " MinDuration = \"%s\"", mindur);
+      sprintf (buf, " Min = \"%s\"", minval);
    } else {
       if (parser->RaFieldWidth != RA_FIXED_WIDTH)
-         len = strlen(mindur);
-      sprintf (buf, "%*.*s ", len, len, mindur);
+         len = strlen(minval);
+      sprintf (buf, "%*.*s ", len, len, minval);
    }
  
 #ifdef ARGUSDEBUG
@@ -4106,30 +4215,28 @@ ArgusPrintMinDuration (struct ArgusParserStruct *parser, char *buf, struct Argus
 }
 
 void
-ArgusPrintMaxDuration (struct ArgusParserStruct *parser, char *buf, struct ArgusRecordStruct *argus, int len)
+ArgusPrintMax (struct ArgusParserStruct *parser, char *buf, struct ArgusRecordStruct *argus, int len)
 {
    struct ArgusAgrStruct *agr = NULL;
-   char maxdur[32];
+   char maxval[32];
 
-   bzero (maxdur, 32);
+   bzero (maxval, 32);
    if (argus->hdr.type & ARGUS_MAR) {
    } else {
       if ((agr = (struct ArgusAgrStruct *) argus->dsrs[ARGUS_AGR_INDEX]) != NULL)
-         sprintf (maxdur, "%.*f", parser->pflag, agr->act.maxval);
-      else
-         ArgusPrintDuration (parser, maxdur, argus, len);
+         sprintf (maxval, "%.*f", parser->pflag, agr->act.maxval);
    }
 
    if (parser->ArgusPrintXml) {
-      sprintf (buf, " MaxDuration = \"%s\"", maxdur);
+      sprintf (buf, " Max = \"%s\"", maxval);
    } else {
       if (parser->RaFieldWidth != RA_FIXED_WIDTH)
-         len = strlen(maxdur);
-      sprintf (buf, "%*.*s ", len, len, maxdur);
+         len = strlen(maxval);
+      sprintf (buf, "%*.*s ", len, len, maxval);
    }
 
 #ifdef ARGUSDEBUG
-   ArgusDebug (10, "ArgusPrintMaxDuration (0x%x, 0x%x)", buf, argus);
+   ArgusDebug (10, "ArgusPrintMax (0x%x, 0x%x)", buf, argus);
 #endif
 }
 
@@ -4157,7 +4264,7 @@ ArgusPrintStdDeviation (struct ArgusParserStruct *parser, char *buf, struct Argu
    }
 
 #ifdef ARGUSDEBUG
-   ArgusDebug (10, "ArgusPrintMaxDuration (0x%x, 0x%x)", buf, argus);
+   ArgusDebug (10, "ArgusPrintStdDeviation (0x%x, 0x%x)", buf, argus);
 #endif
 }
 
@@ -4673,7 +4780,7 @@ ArgusPrintSourceID (struct ArgusParserStruct *parser, char *buf, struct ArgusRec
       value = "";
 
    if (parser->ArgusPrintXml) {
-      sprintf (buf, " SourceID = \"%s\"", value);
+      sprintf (buf, " SourceId = \"%s\"", value);
    } else {
       if (parser->RaFieldWidth != RA_FIXED_WIDTH)
          len = strlen(value);
@@ -10851,6 +10958,12 @@ ArgusGenerateLabel(struct ArgusParserStruct *parser, struct ArgusRecordStruct *a
 }
 
 void
+ArgusPrintCauseLabel (struct ArgusParserStruct *parser, char *buf, int len)
+{
+   sprintf (buf, "%*.*s ", len, len, "Cause");
+}
+ 
+void
 ArgusPrintStartDateLabel (struct ArgusParserStruct *parser, char *buf, int len)
 {
    len += parser->pflag;
@@ -11944,21 +12057,21 @@ ArgusPrintDstDurationLabel (struct ArgusParserStruct *parser, char *buf, int len
 }
 
 void
-ArgusPrintAvgDurationLabel (struct ArgusParserStruct *parser, char *buf, int len)
+ArgusPrintMeanLabel (struct ArgusParserStruct *parser, char *buf, int len)
 {
-   sprintf (buf, "%*.*s ", len, len, "AvgDur");
+   sprintf (buf, "%*.*s ", len, len, "Mean");
 }
 
 void
-ArgusPrintMinDurationLabel (struct ArgusParserStruct *parser, char *buf, int len)
+ArgusPrintMinLabel (struct ArgusParserStruct *parser, char *buf, int len)
 {
-   sprintf (buf, "%*.*s ", len, len, "MinDur");
+   sprintf (buf, "%*.*s ", len, len, "Min");
 }
 
 void
-ArgusPrintMaxDurationLabel (struct ArgusParserStruct *parser, char *buf, int len)
+ArgusPrintMaxLabel (struct ArgusParserStruct *parser, char *buf, int len)
 {
-   sprintf (buf, "%*.*s ", len, len, "MaxDur");
+   sprintf (buf, "%*.*s ", len, len, "Max");
 }
 
 void
@@ -14357,6 +14470,13 @@ ArgusPrintCountryCode (struct ArgusParserStruct *parser, struct ArgusRecordStruc
    if ((labeler = parser->ArgusLabeler) == NULL) {
       parser->ArgusLabeler = ArgusNewLabeler(parser, ARGUS_LABELER_COCODE);
       labeler = parser->ArgusLabeler;
+   } else {
+      if (labeler->ArgusAddrTree == NULL) {
+         if (parser->ArgusDelegatedIPFile) {
+            if (!(RaReadAddressConfig (parser, parser->ArgusLabeler, parser->ArgusDelegatedIPFile) > 0))
+               ArgusLog (LOG_ERR, "ArgusNewLabeler: RaReadAddressConfig error");
+         }
+      }
    }
 
    if (labeler->ArgusAddrTree != NULL) {
@@ -17492,7 +17612,7 @@ ArgusLog (int priority, char *fmt, ...)
 
    switch (priority) {
       case LOG_ERR:
-         ArgusShutDown(priority);
+         ArgusShutDown(-1);
          break;
 
       default:
@@ -18913,10 +19033,8 @@ struct ArgusV2MacStruct {
 
 
 #include <cflowd.h>
-extern char *ArgusVersionStr;
 int ArgusWriteConnection (struct ArgusParserStruct *parser, struct ArgusInput *, u_char *, int);
 
-extern char *ArgusVersionStr;
 extern ArgusNetFlowHandler ArgusLookUpNetFlow(struct ArgusInput *, int); 
 
 
@@ -18981,7 +19099,8 @@ ArgusReadConnection (struct ArgusParserStruct *parser, struct ArgusInput *input,
 
                      input->offset = 16;
 
-                     if (argus.argus_mar.argusid == ntohl(ARGUS_COOKIE)) {
+                     if ((argus.argus_mar.argusid == ntohl(ARGUS_COOKIE)) ||
+                         (argus.argus_mar.argusid ==       ARGUS_COOKIE)) {
                         int size = sizeof(argus) - 16;
                         int br = 0;
                         cnt = 0;
@@ -19147,7 +19266,7 @@ ArgusReadConnection (struct ArgusParserStruct *parser, struct ArgusInput *input,
                            argus.hdr.len           = sizeof (argus) / 4;
                            argus.argus_mar.argusid = ARGUS_COOKIE;
                            if (input->addr.s_addr != 0)
-                              argus.argus_mar.thisid  = htonl(input->addr.s_addr);
+                              argus.argus_mar.thisid = input->addr.s_addr;
 
                            argus.argus_mar.startime.tv_sec = ArgusParser->ArgusGlobalTime.tv_sec;
                            argus.argus_mar.now.tv_sec      = ArgusParser->ArgusGlobalTime.tv_sec;
@@ -19245,7 +19364,7 @@ ArgusReadConnection (struct ArgusParserStruct *parser, struct ArgusInput *input,
 #endif
                      input->offset = 16;
 
-                     if (((argus.hdr.type & 0x0F) >= MAJOR_VERSION_3) || (argus.argus_mar.argusid == ntohl(ARGUS_COOKIE))) {
+                     if (((argus.hdr.type & 0x0F) >= MAJOR_VERSION_3) || (argus.argus_mar.argusid == htonl(ARGUS_COOKIE))) {
                         switch (argus.hdr.cause & 0xF0) {
                            case ARGUS_ERROR:
                               switch (argus.hdr.cause & 0x0F) {
@@ -19263,7 +19382,7 @@ ArgusReadConnection (struct ArgusParserStruct *parser, struct ArgusInput *input,
                               break;
 
                            case ARGUS_START:
-                              if (argus.argus_mar.argusid == ntohl(ARGUS_COOKIE)) {
+                              if (argus.argus_mar.argusid == htonl(ARGUS_COOKIE)) {
 /*
                                  int size = sizeof(argus) - 16;
 
@@ -19323,7 +19442,7 @@ ArgusReadConnection (struct ArgusParserStruct *parser, struct ArgusInput *input,
                      
                         if (argus2->ahdr.type & ARGUS_V2_MAR) {
                            u_short length = ntohs(argus2->ahdr.length);
-                           u_int argusid   = ntohl(argus2->ahdr.argusid);
+                           u_int argusid  = ntohl(argus2->ahdr.argusid);
                            u_int status   = ntohl(argus2->ahdr.status);
                            u_int sequence = ntohl(argus2->ahdr.seqNumber);
 
@@ -19489,7 +19608,7 @@ ArgusReadConnection (struct ArgusParserStruct *parser, struct ArgusInput *input,
 #endif
                                  input->offset = 16;
 
-                                 if (argus.argus_mar.argusid == ntohl(ARGUS_COOKIE)) {
+                                 if (argus.argus_mar.argusid == htonl(ARGUS_COOKIE)) {
                                     int size = sizeof(argus) - 16;
 
                                     if ((cnt = read (input->fd, &((u_char *)&argus)[16], size)) != size) {
@@ -21207,14 +21326,7 @@ ArgusParseInit (struct ArgusParserStruct *parser, struct ArgusInput *input)
       input->ArgusReadPtr = input->ArgusReadBuffer;
       input->ArgusConvPtr = input->ArgusConvBuffer;
    }
-/*
-   if (!(ArgusParseInited++)) {
-      if (input)
-         ArgusInitAddrtoname (parser, input->ArgusLocalNet, input->ArgusNetMask);
-      else
-         ArgusInitAddrtoname (parser, 0L, 0L);
-   }
-*/
+
 #ifdef ARGUSDEBUG
    if (input) {
       ArgusDebug (2, "ArgusParseInit(0x%x 0x%x\n", parser, input);

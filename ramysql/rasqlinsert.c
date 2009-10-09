@@ -128,7 +128,6 @@ int ArgusCreateSQLSaveTable(char *);
 char *ArgusScheduleSQLQuery (struct ArgusParserStruct *, struct ArgusAggregatorStruct *, struct ArgusRecordStruct *, char *, int);
 void RaMySQLDeleteRecords(struct ArgusParserStruct *, struct ArgusRecordStruct *);
 
-void RaSQLQueryMcastTables (void);
 void RaSQLQueryTable (char *);
 void RaSQLQueryNetworksTable (unsigned int, unsigned int, unsigned int);
 void RaSQLQueryProbes (void);
@@ -722,8 +721,15 @@ ArgusClientInit (struct ArgusParserStruct *parser)
          RaTopUpdateInterval.tv_sec  = 1;
          RaTopUpdateInterval.tv_usec = 0;
       } else {
-         RaTopUpdateInterval.tv_sec  = 0;
-         RaTopUpdateInterval.tv_usec = 453613;
+
+         if ((parser->ArgusUpdateInterval.tv_sec  != 0) ||
+             (parser->ArgusUpdateInterval.tv_usec != 0)) {
+            RaTopUpdateInterval.tv_sec   = parser->ArgusUpdateInterval.tv_sec;
+            RaTopUpdateInterval.tv_usec  = parser->ArgusUpdateInterval.tv_usec;
+         } else {
+            RaTopUpdateInterval.tv_sec  = 0;
+            RaTopUpdateInterval.tv_usec = 453613;
+         }
       }
 
 #ifdef ARGUS_CURSES
@@ -955,12 +961,19 @@ RaTopLoop (struct ArgusParserStruct *parser)
 
          } else {
             if (ArgusCursesEnabled) {
+
+#define ARGUSSQLMAXCOLUMNS      128
+
+
 #if defined(ARGUSMYSQL)
                if (RaDatabase && RaTable) {
                   struct ArgusRecordStruct *ns = NULL, *tn = NULL;
+                  char *ArgusTableColumnName[ARGUSSQLMAXCOLUMNS];
                   char sbuf[MAXSTRLEN], buf[MAXSTRLEN];
+                  char ArgusSQLStatement[MAXSTRLEN];
                   struct timeval RaSQLUpdateTime = {0, 0};
                   MYSQL_RES *mysqlRes;
+                  int retn;
 
                   RaSQLUpdateDB = 0;
                   bzero(sbuf, sizeof(sbuf));
@@ -979,6 +992,42 @@ RaTopLoop (struct ArgusParserStruct *parser)
                   } else
                      sprintf (ArgusSQLSaveTableNameBuf, "%s", RaTable);
 
+                  if (RaTables == NULL) {
+                     if ((RaTables = ArgusCalloc(sizeof(void *), 2)) == NULL)
+                        ArgusLog(LOG_ERR, "mysql_init error %s", strerror(errno));
+                  }
+
+                  if (RaTables[0] != NULL)
+                     free(RaTables[0]);
+
+                  RaTables[0] = strdup(ArgusSQLSaveTableNameBuf);
+
+                  bzero(ArgusTableColumnName, sizeof (ArgusTableColumnName));
+                  sprintf (ArgusSQLStatement, "desc %s", RaTables[0]);
+
+                  if ((retn = mysql_real_query(&mysql, ArgusSQLStatement , strlen(ArgusSQLStatement))) != 0)
+                     ArgusLog(LOG_ERR, "mysql_real_query error %s", mysql_error(&mysql));
+                  else {
+                     if ((mysqlRes = mysql_store_result(&mysql)) != NULL) {
+                        if ((retn = mysql_num_fields(mysqlRes)) > 0) {
+                           int ind = 0;
+                           while ((row = mysql_fetch_row(mysqlRes)))
+                              ArgusTableColumnName[ind++] = strdup(row[0]);
+
+                           mysql_free_result(mysqlRes);
+                        }
+                     }
+                  }
+
+                  if (!(parser->sflag)) {
+                     int i;
+                     bzero(parser->RaSOptionStrings, sizeof (parser->RaSOptionStrings));
+                     for (i = 0; (ArgusTableColumnName[i] != NULL) && (i < ARGUSSQLMAXCOLUMNS); i++)
+                        parser->RaSOptionStrings[i] = ArgusTableColumnName[i];
+
+                     ArgusProcessSOptions(parser);
+                  }
+
                   sprintf (sbuf, "SELECT record FROM %s", ArgusSQLSaveTableNameBuf);
                   if (ArgusParser->ArgusSQLStatement != NULL)
                      sprintf (&sbuf[strlen(sbuf)], " WHERE %s", ArgusParser->ArgusSQLStatement);
@@ -994,7 +1043,7 @@ RaTopLoop (struct ArgusParserStruct *parser)
                         ((RaSQLUpdateTime.tv_sec == ArgusParser->ArgusRealTime.tv_sec) && 
                          (RaSQLUpdateTime.tv_usec <= ArgusParser->ArgusRealTime.tv_usec))) {
 #if defined(ARGUSDEBUG)
-                        ArgusDebug (2, "RaTopProcess () fetching %s data\n", RaTable);
+                        ArgusDebug (4, "RaTopProcess () fetching %s data\n", RaTable);
 #endif
 
                         RaSQLUpdateTime = ArgusParser->ArgusRealTime;
@@ -1192,7 +1241,7 @@ RaResizeHandler (int sig)
 #endif
 
 #ifdef ARGUSDEBUG 
-   ArgusDebug (1, "RaResizeHandler(%d)\n", sig);
+   ArgusDebug (3, "RaResizeHandler(%d)\n", sig);
 #endif
 }
 
@@ -1720,7 +1769,11 @@ RaRefreshDisplay(struct ArgusParserStruct *parser)
 #endif
 
 #if defined(ARGUSDEBUG)
+#if defined(ARGUS_CURSES)
    ArgusDebug (3, "ArgusRefreshDisplay (0x%x) screen %d display %d", parser, RaScreenLines, RaDisplayLines); 
+#else
+   ArgusDebug (3, "ArgusRefreshDisplay (0x%x)", parser); 
+#endif
 #endif
 }
 
@@ -2008,8 +2061,11 @@ ArgusProcessQueue (struct ArgusQueueStruct *queue, struct timeval *ts)
 
 
 extern void ArgusCloseInput(struct ArgusParserStruct *parser, struct ArgusInput *);
-struct timeval RaProcessQueueTimer = {0, 250000};
 void RaResizeScreen(void);
+
+int ArgusTotalSQLSearches = 0;
+int ArgusTotalSQLUpdates  = 0;
+int ArgusTotalSQLWrites = 0;
 
 void
 ArgusClientTimeout ()
@@ -2035,9 +2091,12 @@ ArgusClientTimeout ()
                if (ArgusProcessQueue(queue, &ArgusParser->ArgusRealTime)) 
                   ArgusUpdateScreen();
             }
-
+/*
             ArgusParser->RaClientUpdate.tv_sec  += RaProcessQueueTimer.tv_sec;
             ArgusParser->RaClientUpdate.tv_usec += RaProcessQueueTimer.tv_usec;
+*/
+            ArgusParser->RaClientUpdate.tv_sec  += RaTopUpdateInterval.tv_sec;
+            ArgusParser->RaClientUpdate.tv_usec += RaTopUpdateInterval.tv_usec;
 
             while (ArgusParser->RaClientUpdate.tv_usec > 1000000) {
                ArgusParser->RaClientUpdate.tv_sec++;
@@ -2065,17 +2124,21 @@ ArgusClientTimeout ()
           char *sptr = NULL;
           int slen;
 
+          ArgusTotalSQLUpdates += ArgusSQLQueryList->count;
+
+#if defined(ARGUSDEBUG)
+          ArgusDebug (2, "ArgusClientTimeout ArgusTotalSearches %d ArgusTotalSQLUpdates %d written %d bytes\n", ArgusTotalSQLSearches, ArgusTotalSQLUpdates, ArgusTotalSQLWrites); 
+#endif
           while (!(ArgusListEmpty(ArgusSQLQueryList))) {
              if ((sqry = (void *) ArgusPopFrontList(ArgusSQLQueryList, ARGUS_LOCK)) != NULL) {
                 if ((sptr = sqry->sptr) != NULL) {
                    slen = strlen(sptr);
 #if defined(ARGUSDEBUG)
                    if (sqry->dptr != NULL)
-                      ArgusDebug (4, "ArgusSQLQuery (%s)\n", sqry->dptr);
+                      ArgusDebug (3, "ArgusSQLQuery (%s)\n", sqry->dptr);
                    else
-                      ArgusDebug (4, "ArgusSQLQuery (%s)\n", sqry->sptr);
+                      ArgusDebug (3, "ArgusSQLQuery (%s)\n", sqry->sptr);
 #endif
-
                    if (ArgusSQLBulkBuffer != NULL) {
                       char *tptr = sptr;
 
@@ -2083,6 +2146,8 @@ ArgusClientTimeout ()
                          if (ArgusSQLBulkBufferIndex > 0) {
                             if (mysql_real_query(&mysql, ArgusSQLBulkBuffer, ArgusSQLBulkBufferIndex) != 0)
                                ArgusLog(LOG_INFO, "mysql_real_query error %s", mysql_error(&mysql));
+                            else
+                               ArgusTotalSQLWrites += ArgusSQLBulkBufferIndex;
 
                             if (ArgusSQLBulkLastTable) {
                                free(ArgusSQLBulkLastTable);
@@ -2093,6 +2158,8 @@ ArgusClientTimeout ()
 
                          if (mysql_real_query(&mysql, tptr, slen) != 0)
                             ArgusLog(LOG_INFO, "mysql_real_query error %s", mysql_error(&mysql));
+                         else
+                            ArgusTotalSQLWrites += slen;
 
                       } else {
                          if (ArgusSQLBulkLastTable) {
@@ -2100,6 +2167,8 @@ ArgusClientTimeout ()
                                ((ArgusSQLBulkBufferIndex + slen) > ArgusSQLBulkInsertSize)) {
                                if (mysql_real_query(&mysql, ArgusSQLBulkBuffer, ArgusSQLBulkBufferIndex) != 0)
                                   ArgusLog(LOG_INFO, "mysql_real_query error %s", mysql_error(&mysql));
+                               else
+                                  ArgusTotalSQLWrites += ArgusSQLBulkBufferIndex;
 
                                if (ArgusSQLBulkLastTable) {
                                   free(ArgusSQLBulkLastTable);
@@ -2125,9 +2194,13 @@ ArgusClientTimeout ()
                             ArgusSQLBulkLastTable = strdup(sqry->tbl);
                       }
 
-                   } else
-                      if (mysql_real_query(&mysql, sptr, slen) != 0)
+                   } else {
+                      if (mysql_real_query(&mysql, sptr, slen) != 0) {
                          ArgusLog(LOG_INFO, "mysql_real_query error %s", mysql_error(&mysql));
+                      } else {
+                         ArgusTotalSQLWrites += ArgusSQLBulkBufferIndex;
+                      }
+                   }
 
                    free(sptr);
                    if (sqry->dptr != NULL)
@@ -2141,6 +2214,9 @@ ArgusClientTimeout ()
           if (ArgusSQLBulkBufferIndex > 0) {
              if (mysql_real_query(&mysql, ArgusSQLBulkBuffer, ArgusSQLBulkBufferIndex) != 0)
                 ArgusLog(LOG_INFO, "mysql_real_query error %s", mysql_error(&mysql));
+             else {
+                ArgusTotalSQLWrites += ArgusSQLBulkBufferIndex;
+             }
 
              ArgusSQLBulkBufferIndex = 0;
              if (ArgusSQLBulkLastTable) {
@@ -5215,11 +5291,14 @@ time that needs to lapse */
                   parser->nflag   = nflag;
 
 #if defined(ARGUSDEBUG)
-                  ArgusDebug (1, "ArgusProcessThisRecord () sql query %s\n", sbuf); 
+                  ArgusDebug (3, "ArgusProcessThisRecord () sql query %s\n", sbuf); 
 #endif
                   if ((retn = mysql_real_query(&mysql, sbuf, strlen(sbuf))) != 0)
                      ArgusLog(LOG_INFO, "mysql_real_query error %s", mysql_error(&mysql));
                   else {
+
+                     ArgusTotalSQLSearches++;
+
                      if ((mysqlRes = mysql_store_result(&mysql)) != NULL) {
                         if ((retn = mysql_num_fields(mysqlRes)) > 0) {
                            while ((row = mysql_fetch_row(mysqlRes))) {
@@ -6855,9 +6934,8 @@ argus_command_string(void)
                ArgusParser->timearg = NULL;
             }
 
-            if (RaCommandInputStr)
-               if (strlen(RaCommandInputStr))
-                  ArgusParser->timearg = strdup(RaCommandInputStr);
+            if (strlen(RaCommandInputStr))
+               ArgusParser->timearg = strdup(RaCommandInputStr);
 
             ArgusCheckTimeFormat (ArgusParser->RaTmStruct, ArgusParser->timearg);
             break;
@@ -7209,7 +7287,7 @@ argus_process_command (struct ArgusParserStruct *parser, int status)
           case 'T':
              retn = RAGETTINGT;
              RaInputString = RAGETTINGTSTR;
-             sprintf (&RaCommandInputStr[strlen(RaCommandInputStr)], "%d.%6d",
+             sprintf (&RaCommandInputStr[strlen(RaCommandInputStr)], "%d.%06d",
                    (int)ArgusParser->timeout.tv_sec, (int)ArgusParser->timeout.tv_usec);
              RaCommandIndex = strlen(RaCommandInputStr); 
              break;
@@ -7504,11 +7582,14 @@ RaSQLQueryTable (char *table)
    sprintf (buf, "SELECT record from %s", table);
 
 #ifdef ARGUSDEBUG
-   ArgusDebug (1, "SQL Query %s\n", buf);
+   ArgusDebug (3, "SQL Query %s\n", buf);
 #endif
    if ((retn = mysql_real_query(&mysql, buf, strlen(buf))) != 0)
       ArgusLog(LOG_INFO, "mysql_real_query error %s", mysql_error(&mysql));
    else {
+
+      ArgusTotalSQLSearches++;
+
       if ((mysqlRes = mysql_store_result(&mysql)) != NULL) {
          if ((retn = mysql_num_fields(mysqlRes)) > 0) {
             while ((row = mysql_fetch_row(mysqlRes))) {
@@ -7533,48 +7614,6 @@ RaSQLQueryTable (char *table)
    }
 }
 
-void
-RaSQLQueryMcastTables (void)
-{
-   char buf[0x10000], sbuf[0x10000];
-   MYSQL_RES *mysqlRes;
-   int retn, x, i;
-
-   for (i = 0; i < RA_MAXMCASTSQLQUERY; i++) {
-      sprintf (buf, RaMcastTableQueryString[i], RaDatabase);
-
-#ifdef ARGUSDEBUG
-      ArgusDebug (1, "SQL Query %s\n", buf);
-#endif
-      if ((retn = mysql_real_query(&mysql, buf, strlen(buf))) != 0)
-         ArgusLog(LOG_INFO, "mysql_real_query error %s", mysql_error(&mysql));
-      else {
-         if ((mysqlRes = mysql_store_result(&mysql)) != NULL) {
-            if ((retn = mysql_num_fields(mysqlRes)) > 0) {
-               while ((row = mysql_fetch_row(mysqlRes))) {
-                  unsigned long *lengths;
-
-                  lengths = mysql_fetch_lengths(mysqlRes);
-                  bzero(sbuf, sizeof(sbuf));
-    
-                  for (x = 0; x < retn; x++) {
-                     bcopy (row[x], sbuf, (int) lengths[x]);
-
-                     if (((struct ArgusRecord *)sbuf)->hdr.type & ARGUS_MAR) {
-                        bcopy ((char *) &sbuf, (char *)&ArgusInput->ArgusInitCon,
-                           sizeof (struct ArgusRecord));
-                     } else 
-                        ArgusHandleDatum (ArgusParser, ArgusInput, (struct ArgusRecord *)&sbuf,
-                              &ArgusParser->ArgusFilterCode);
-                  }
-               }
-            }
-
-            mysql_free_result(mysqlRes);
-         }
-      }
-   }
-}
 
 void
 RaSQLQueryProbes ()
@@ -7587,7 +7626,7 @@ RaSQLQueryProbes ()
 
    sprintf (buf, "%s", RaTableQueryString[0]);
 #ifdef ARGUSDEBUG
-   ArgusDebug (1, "SQL Query %s\n", buf);
+   ArgusDebug (3, "SQL Query %s\n", buf);
 #endif
    if ((retn = mysql_real_query(&mysql, buf, strlen(buf))) != 0)
       ArgusLog(LOG_INFO, "mysql_real_query error %s", mysql_error(&mysql));
@@ -7645,7 +7684,7 @@ RaSQLQuerySecondsTable (unsigned int start, unsigned int stop)
    }
 
 #ifdef ARGUSDEBUG
-   ArgusDebug (1, "SQL Query %s\n", buf);
+   ArgusDebug (3, "SQL Query %s\n", buf);
 #endif
 
    if ((retn = mysql_real_query(&mysql, buf, strlen(buf))) != 0)

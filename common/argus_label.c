@@ -20,9 +20,9 @@
  */
 
 /*
- * $Id: //depot/argus/clients/common/argus_label.c#14 $
- * $DateTime: 2009/07/22 18:40:35 $
- * $Change: 1767 $
+ * $Id: //depot/argus/clients/common/argus_label.c#15 $
+ * $DateTime: 2009/08/31 11:54:50 $
+ * $Change: 1796 $
  */
 
 /*
@@ -99,8 +99,8 @@ int RaBestGuessScore = 0;
 
 #define RALABEL_IANA_ADDRESS			0
 #define RALABEL_IANA_ADDRESS_FILE		1
-#define RALABEL_COUNTRY_CODE			2
-#define RALABEL_COUNTRY_CODE_FILE		3
+#define RALABEL_ARIN_COUNTRY_CODES		2
+#define RA_DELEGATED_IP				3
 #define RALABEL_BIND_NAME			4
 #define RA_PRINT_DOMAINONLY			5
 #define RALABEL_IANA_PORT			6
@@ -115,8 +115,8 @@ int RaBestGuessScore = 0;
 char *RaLabelResourceFileStr [] = {
    "RALABEL_IANA_ADDRESS=",
    "RALABEL_IANA_ADDRESS_FILE=",
-   "RALABEL_COUNTRY_CODE=",
-   "RALABEL_COUNTRY_CODE_FILE=",
+   "RALABEL_ARIN_COUNTRY_CODES=",
+   "RA_DELEGATED_IP=",
    "RALABEL_BIND_NAME=",
    "RA_PRINT_DOMAINONLY=",
    "RALABEL_IANA_PORT=",
@@ -179,14 +179,14 @@ RaLabelParseResourceFile (struct ArgusParserStruct *parser, struct ArgusLabelerS
                                  ArgusLog (LOG_ERR, "ArgusNewLabeler: RaReadAddressConfig error");
                               break;
 
-                           case RALABEL_COUNTRY_CODE:
+                           case RALABEL_ARIN_COUNTRY_CODES:
                               if (!(strncasecmp(optarg, "yes", 3)))
                                  labeler->RaLabelCountryCode = 1;
                               else
                                  labeler->RaLabelCountryCode = 0;
                               break;
 
-                           case RALABEL_COUNTRY_CODE_FILE:
+                           case RA_DELEGATED_IP:
                               if (!(RaReadAddressConfig (parser, parser->ArgusLabeler, optarg) > 0))
                                  ArgusLog (LOG_ERR, "ArgusNewLabeler: RaReadAddressConfig error");
                               break;
@@ -434,6 +434,10 @@ ArgusLabelRecord (struct ArgusParserStruct *parser, struct ArgusRecordStruct *ar
          found++;
       }
    }
+
+   if (labeler->RaLabelCountryCode)
+      RaCountryCodeLabel (parser, argus);
+
    if (labeler->RaLabelBindName) {
       struct ArgusFlow *flow = (struct ArgusFlow *) argus->dsrs[ARGUS_FLOW_INDEX];
 
@@ -811,7 +815,7 @@ RaReadFlowLabels (struct ArgusParserStruct *parser, struct ArgusLabelerStruct *l
 
 
 struct RaAddressStruct *RaFindAddress (struct ArgusParserStruct *, struct RaAddressStruct *, struct RaAddressStruct *, int);
-struct RaAddressStruct *RaInsertAddress (struct ArgusParserStruct *, struct ArgusLabelerStruct *, struct RaAddressStruct *, struct RaAddressStruct *, int);
+struct RaAddressStruct *RaInsertAddress (struct ArgusParserStruct *, struct ArgusLabelerStruct *, struct RaAddressStruct **, struct RaAddressStruct *, int);
 
 void RaInsertRIRTree (struct ArgusParserStruct *, struct ArgusLabelerStruct *labeler, char *);
 void RaInsertAddressTree (struct ArgusParserStruct *, struct ArgusLabelerStruct *labeler, char *);
@@ -885,15 +889,15 @@ RaFindAddress (struct ArgusParserStruct *parser, struct RaAddressStruct *tree, s
 }
 
 struct RaAddressStruct *
-RaInsertAddress (struct ArgusParserStruct *parser, struct ArgusLabelerStruct *labeler, struct RaAddressStruct *tree, struct RaAddressStruct *node, int status)
+RaInsertAddress (struct ArgusParserStruct *parser, struct ArgusLabelerStruct *labeler, struct RaAddressStruct **ArgusAddrTree, struct RaAddressStruct *node, int status)
 {
    struct RaAddressStruct *retn  = NULL;
    struct RaAddressStruct *ptree = NULL;
 
-   if (labeler != NULL) {
-      struct RaAddressStruct **ArgusAddrTree = labeler->ArgusAddrTree;
+   if ((labeler != NULL) && (ArgusAddrTree != NULL) && (node != NULL)) {
+      struct RaAddressStruct *tree = ArgusAddrTree[node->addr.type];
 
-      if ((tree == NULL) && (ArgusAddrTree[node->addr.type] == NULL)) {
+      if (tree == NULL) {
          ArgusAddrTree[node->addr.type] = node;
 
          if (node->addr.masklen)
@@ -1141,7 +1145,7 @@ RaInsertAddress (struct ArgusParserStruct *parser, struct ArgusLabelerStruct *la
    }
 
 #ifdef ARGUSDEBUG
-   ArgusDebug (4, "RaInsertAddress (0x%x, 0x%x, 0x%x, 0x%x) returning 0x%x\n", parser, tree, node, status, retn);
+   ArgusDebug (4, "RaInsertAddress (0x%x, 0x%x, 0x%x, 0x%x) returning 0x%x\n", parser, ArgusAddrTree, node, status, retn);
 #endif
 
    return (retn);
@@ -1291,7 +1295,7 @@ RaInsertRIRTree (struct ArgusParserStruct *parser, struct ArgusLabelerStruct *la
                         } else
                            saddr->label = strdup (co);
 
-                        RaInsertAddress (parser, labeler, ArgusAddrTree[saddr->addr.type], saddr, ARGUS_VISITED);
+                        RaInsertAddress (parser, labeler, ArgusAddrTree, saddr, ARGUS_VISITED);
 
                      } else {
                         ArgusFree(saddr);
@@ -1425,7 +1429,7 @@ RaInsertAddressTree (struct ArgusParserStruct *parser, struct ArgusLabelerStruct
             if ((node = RaFindAddress (parser, ArgusAddrTree[saddr->addr.type], saddr, ARGUS_EXACT_MATCH)) == NULL) {
                if (tptr)
                   saddr->addr.str = strdup(tptr);
-               RaInsertAddress (parser, labeler, ArgusAddrTree[saddr->addr.type], saddr, ARGUS_VISITED);
+               RaInsertAddress (parser, labeler, ArgusAddrTree, saddr, ARGUS_VISITED);
 
                if (label) {
                   if (saddr->label != NULL) {
@@ -2663,6 +2667,46 @@ int
 RaMatchService(struct ArgusRecord *argus)
 {
    int retn = 0;
+   return (retn);
+}
+
+
+extern void ArgusPrintSrcCountryCode (struct ArgusParserStruct *, char *, struct ArgusRecordStruct *, int);
+extern void ArgusPrintDstCountryCode (struct ArgusParserStruct *, char *, struct ArgusRecordStruct *, int);
+
+
+int
+RaCountryCodeLabel (struct ArgusParserStruct *parser, struct ArgusRecordStruct *argus)
+{
+   extern struct ArgusCanonRecord ArgusGenerateCanonBuffer;
+   int retn = 0;
+
+   if (argus != NULL) {
+      struct ArgusCountryCodeStruct *cocode;
+      struct ArgusCanonRecord  *canon = NULL;
+
+      if (argus->input != NULL) {
+         canon = &argus->input->ArgusGenerateRecordCanonBuf;
+      } else {
+         canon = &ArgusGenerateCanonBuffer;
+      }
+
+      argus->dsrs[ARGUS_COCODE_INDEX] = NULL;
+
+      cocode = &canon->cocode;
+      bzero(cocode, sizeof(*cocode));  
+
+      cocode->hdr.type             = ARGUS_COCODE_DSR;
+      cocode->hdr.argus_dsrvl8.len = (sizeof (*cocode) + 3) / 4;
+      cocode->hdr.subtype = 0;
+
+      ArgusPrintSrcCountryCode (parser, cocode->src, argus, 2);
+      ArgusPrintDstCountryCode (parser, cocode->dst, argus, 2);
+
+      argus->dsrindex |= (0x01 << ARGUS_COCODE_INDEX);
+      argus->dsrs[ARGUS_COCODE_INDEX] = (struct ArgusDSRHeader*) cocode;
+   }
+
    return (retn);
 }
 

@@ -1,3 +1,19 @@
+Thu Aug 27 22:27:19 EDT 2009
+Fixes for ralabel() to properly insert country codes.
+Fixes for racluster() to aggregate correctly fow country codes.
+
+Tue Aug 25 19:04:23 EDT 2009
+Changes to thisid and argusid processing for CISCO conversion
+Changes to rahisto() for better control of output (added -c option support).
+
+Thu Aug 13 13:20:15 EDT 2009
+Fix for racluster configuration to enable preservation when specified
+in the configuration.  Getting ready to fix problems where records
+headers are corrupt.
+
+Sun Aug  9 19:44:21 EDT 2009
+Fix for printing duration correctly when we have all the timestamps lite up.
+
 Fri Jul 31 11:47:29 EDT 2009
 Fix for 2.0 record conversion.  rtcp dsr inserted with len of 1 and
 ArgusNtoH was corrupting other DSRs trying to little-endian the field.

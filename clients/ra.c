@@ -20,9 +20,9 @@
  */
 
 /* 
- * $Id: //depot/argus/clients/clients/ra.c#41 $
- * $DateTime: 2009/05/21 18:16:12 $
- * $Change: 1742 $
+ * $Id: //depot/argus/clients/clients/ra.c#42 $
+ * $DateTime: 2009/08/11 01:08:37 $
+ * $Change: 1782 $
  */
 
 /*
@@ -60,6 +60,8 @@ extern int ArgusTotalFarRecords;
 
 extern struct ArgusParserStruct *ArgusParser;
 
+
+
 void
 ArgusClientInit (struct ArgusParserStruct *parser)
 {
@@ -84,6 +86,11 @@ ArgusClientInit (struct ArgusParserStruct *parser)
          }
       }
 
+      if (parser->Pctflag) {
+         parser->ArgusPassNum = 2;
+         if ((parser->ArgusAggregator = ArgusNewAggregator(parser, "srcid")) == NULL)
+            ArgusLog (LOG_ERR, "ArgusClientInit: ArgusNewAggregator error");
+      }
       parser->RaInitialized++;
    }
 }
@@ -200,6 +207,9 @@ usage ()
    fprintf (stderr, "            encode32           process user data using encode32 encoding\n");
    fprintf (stderr, "            encode64           process user data using encode64 encoding\n");
    fprintf (stderr, "         -n                    don't convert numbers to names.\n");
+   fprintf (stderr, "         -N <num>              process the first <num> records in the stream\n");
+   fprintf (stderr, "            <start-end>        process this inclusive range of matching records.\n");
+   fprintf (stderr, "            <start+num>        process this number of matching records, starting at start.\n");
    fprintf (stderr, "         -p <digits>           print fractional time with <digits> precision.\n");
    fprintf (stderr, "         -q                    quiet mode. don't print record outputs.\n");
    fprintf (stderr, "         -r <file>             read argus data <file>. '-' denotes stdin.\n");
@@ -289,98 +299,113 @@ RaProcessThisRecord (struct ArgusParserStruct *parser, struct ArgusRecordStruct 
 {
    static char buf[MAXSTRLEN];
 
-   if (parser->ArgusWfileList != NULL) {
-      struct ArgusWfileStruct *wfile = NULL;
-      struct ArgusListObjectStruct *lobj = NULL;
-      int i, count = parser->ArgusWfileList->count;
-
-      if ((lobj = parser->ArgusWfileList->start) != NULL) {
-         for (i = 0; i < count; i++) {
-            if ((wfile = (struct ArgusWfileStruct *) lobj) != NULL) {
-               int retn = 1;
-               if (wfile->filterstr) {
-                  struct nff_insn *wfcode = wfile->filter.bf_insns;
-                  retn = ArgusFilterRecord (wfcode, argus);
-               }
-
-               if (retn != 0) {
-                  if ((parser->exceptfile == NULL) || strcmp(wfile->filename, parser->exceptfile)) {
-                     struct ArgusRecord *argusrec = NULL;
-                     static char sbuf[0x10000];
-                     if ((argusrec = ArgusGenerateRecord (argus, 0L, sbuf)) != NULL) {
-#ifdef _LITTLE_ENDIAN
-                        ArgusHtoN(argusrec);
-#endif
-                        ArgusWriteNewLogfile (parser, argus->input, wfile, argusrec);
-                     }
-                  }
-               }
+   switch (parser->ArgusPassNum)  {
+      case 2: {
+         if (parser->Pctflag) {
+            if (parser->ns == NULL) {
+               parser->ns = ArgusCopyRecordStruct(argus);
+            } else {
+               ArgusMergeRecords (parser->ArgusAggregator, parser->ns, argus);
             }
-
-            lobj = lobj->nxt;
          }
+         break;
       }
 
-   } else {
-      if (!parser->qflag) {
-         if (parser->Lflag && !(parser->ArgusPrintXml)) {
-            if (parser->RaLabel == NULL)
-               parser->RaLabel = ArgusGenerateLabel(parser, argus);
- 
-            if (!(parser->RaLabelCounter++ % parser->Lflag))
-               printf ("%s\n", parser->RaLabel);
- 
-            if (parser->Lflag < 0)
-               parser->Lflag = 0;
-         }
-
-         bzero (buf, sizeof(buf));
-         ArgusPrintRecord(parser, buf, argus, MAXSTRLEN);
-
-         fprintf (stdout, "%s", buf);
-
-         if (parser->eflag == ARGUS_HEXDUMP) {
-            int i;
-            for (i = 0; i < MAX_PRINT_ALG_TYPES; i++) {
-               if (parser->RaPrintAlgorithmList[i] != NULL) {
-                  struct ArgusDataStruct *user = NULL;
-                  if (parser->RaPrintAlgorithmList[i]->print == ArgusPrintSrcUserData) {
-                     int slen = 0, len = parser->RaPrintAlgorithmList[i]->length;
-                     if (len > 0) {
-                        if ((user = (struct ArgusDataStruct *)argus->dsrs[ARGUS_SRCUSERDATA_INDEX]) != NULL) {
-                           if (user->hdr.type == ARGUS_DATA_DSR) {
-                              slen = (user->hdr.argus_dsrvl16.len - 2 ) * 4;
-                           } else
-                              slen = (user->hdr.argus_dsrvl8.len - 2 ) * 4;
-                              
-                           slen = (user->count < slen) ? user->count : slen;
-                           slen = (slen > len) ? len : slen;
-                           ArgusDump ((const u_char *) &user->array, slen, "      ");
+      case 1: {
+         if (parser->ArgusWfileList != NULL) {
+            struct ArgusWfileStruct *wfile = NULL;
+            struct ArgusListObjectStruct *lobj = NULL;
+            int i, count = parser->ArgusWfileList->count;
+      
+            if ((lobj = parser->ArgusWfileList->start) != NULL) {
+               for (i = 0; i < count; i++) {
+                  if ((wfile = (struct ArgusWfileStruct *) lobj) != NULL) {
+                     int retn = 1;
+                     if (wfile->filterstr) {
+                        struct nff_insn *wfcode = wfile->filter.bf_insns;
+                        retn = ArgusFilterRecord (wfcode, argus);
+                     }
+      
+                     if (retn != 0) {
+                        if ((parser->exceptfile == NULL) || strcmp(wfile->filename, parser->exceptfile)) {
+                           struct ArgusRecord *argusrec = NULL;
+                           static char sbuf[0x10000];
+                           if ((argusrec = ArgusGenerateRecord (argus, 0L, sbuf)) != NULL) {
+      #ifdef _LITTLE_ENDIAN
+                              ArgusHtoN(argusrec);
+      #endif
+                              ArgusWriteNewLogfile (parser, argus->input, wfile, argusrec);
+                           }
                         }
                      }
                   }
-                  if (parser->RaPrintAlgorithmList[i]->print == ArgusPrintDstUserData) {
-                     int slen = 0, len = parser->RaPrintAlgorithmList[i]->length;
-                     if (len > 0) {
-                        if ((user = (struct ArgusDataStruct *)argus->dsrs[ARGUS_DSTUSERDATA_INDEX]) != NULL) {
-                           if (user->hdr.type == ARGUS_DATA_DSR) {
-                              slen = (user->hdr.argus_dsrvl16.len - 2 ) * 4;
-                           } else
-                              slen = (user->hdr.argus_dsrvl8.len - 2 ) * 4;
-
-                           slen = (user->count < slen) ? user->count : slen;
-                           slen = (slen > len) ? len : slen;
-                           ArgusDump ((const u_char *) &user->array, slen, "      ");
+      
+                  lobj = lobj->nxt;
+               }
+            }
+      
+         } else {
+            if (!parser->qflag) {
+               if (parser->Lflag && !(parser->ArgusPrintXml)) {
+                  if (parser->RaLabel == NULL)
+                     parser->RaLabel = ArgusGenerateLabel(parser, argus);
+       
+                  if (!(parser->RaLabelCounter++ % parser->Lflag))
+                     printf ("%s\n", parser->RaLabel);
+       
+                  if (parser->Lflag < 0)
+                     parser->Lflag = 0;
+               }
+      
+               bzero (buf, sizeof(buf));
+               ArgusPrintRecord(parser, buf, argus, MAXSTRLEN);
+      
+               fprintf (stdout, "%s", buf);
+      
+               if (parser->eflag == ARGUS_HEXDUMP) {
+                  int i;
+                  for (i = 0; i < MAX_PRINT_ALG_TYPES; i++) {
+                     if (parser->RaPrintAlgorithmList[i] != NULL) {
+                        struct ArgusDataStruct *user = NULL;
+                        if (parser->RaPrintAlgorithmList[i]->print == ArgusPrintSrcUserData) {
+                           int slen = 0, len = parser->RaPrintAlgorithmList[i]->length;
+                           if (len > 0) {
+                              if ((user = (struct ArgusDataStruct *)argus->dsrs[ARGUS_SRCUSERDATA_INDEX]) != NULL) {
+                                 if (user->hdr.type == ARGUS_DATA_DSR) {
+                                    slen = (user->hdr.argus_dsrvl16.len - 2 ) * 4;
+                                 } else
+                                    slen = (user->hdr.argus_dsrvl8.len - 2 ) * 4;
+                                    
+                                 slen = (user->count < slen) ? user->count : slen;
+                                 slen = (slen > len) ? len : slen;
+                                 ArgusDump ((const u_char *) &user->array, slen, "      ");
+                              }
+                           }
                         }
-                     }
+                        if (parser->RaPrintAlgorithmList[i]->print == ArgusPrintDstUserData) {
+                           int slen = 0, len = parser->RaPrintAlgorithmList[i]->length;
+                           if (len > 0) {
+                              if ((user = (struct ArgusDataStruct *)argus->dsrs[ARGUS_DSTUSERDATA_INDEX]) != NULL) {
+                                 if (user->hdr.type == ARGUS_DATA_DSR) {
+                                    slen = (user->hdr.argus_dsrvl16.len - 2 ) * 4;
+                                 } else
+                                    slen = (user->hdr.argus_dsrvl8.len - 2 ) * 4;
+      
+                                 slen = (user->count < slen) ? user->count : slen;
+                                 slen = (slen > len) ? len : slen;
+                                 ArgusDump ((const u_char *) &user->array, slen, "      ");
+                              }
+                           }
+                        }
+                     } else
+                        break;
                   }
-               } else
-                  break;
+               }
+      
+               fprintf (stdout, "\n");
+               fflush (stdout);
             }
          }
-
-         fprintf (stdout, "\n");
-         fflush (stdout);
       }
    }
 }

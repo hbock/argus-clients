@@ -158,7 +158,7 @@ int ArgusLabelRecord (struct ArgusParserStruct *, struct ArgusRecordStruct *);
 void RaPrintLabelTree (struct ArgusLabelerStruct *, struct RaAddressStruct *, int, int);
 
 struct RaAddressStruct *RaFindAddress (struct ArgusParserStruct *, struct RaAddressStruct *, struct RaAddressStruct *, int);
-struct RaAddressStruct *RaInsertAddress (struct ArgusParserStruct *, struct ArgusLabelerStruct *, struct RaAddressStruct *, struct RaAddressStruct *, int);
+struct RaAddressStruct *RaInsertAddress (struct ArgusParserStruct *, struct ArgusLabelerStruct *, struct RaAddressStruct **, struct RaAddressStruct *, int);
 
 char *RaPruneAddressTree (struct ArgusLabelerStruct *, struct RaAddressStruct *);
 
@@ -170,6 +170,7 @@ void RaMapLabelMol (struct ArgusLabelerStruct *, struct RaAddressStruct *, int, 
 void RaPrintLabelMol (struct ArgusLabelerStruct *, struct RaAddressStruct *, int, int, int, int);
 void RaPrintLabelTree (struct ArgusLabelerStruct *, struct RaAddressStruct *, int, int);
 
+int RaCountryCodeLabel (struct ArgusParserStruct *, struct ArgusRecordStruct *);
 char *RaAddressLabel (struct ArgusParserStruct *, struct ArgusRecordStruct *);
 char *RaLabelIANAAddressType (struct ArgusParserStruct *, struct ArgusRecordStruct *);
 char *RaFetchIPv4AddressLabel(struct ArgusParserStruct *, unsigned int *);
@@ -188,7 +189,7 @@ extern void RaPrintLabelTree (struct ArgusLabelerStruct *, struct RaAddressStruc
 extern int ArgusLabelRecord (struct ArgusParserStruct *, struct ArgusRecordStruct *);
 
 extern struct RaAddressStruct *RaFindAddress (struct ArgusParserStruct *, struct RaAddressStruct *, struct RaAddressStruct *, int);
-extern struct RaAddressStruct *RaInsertAddress (struct ArgusParserStruct *, struct ArgusLabelerStruct *, struct RaAddressStruct *, struct RaAddressStruct *, int);
+extern struct RaAddressStruct *RaInsertAddress (struct ArgusParserStruct *, struct ArgusLabelerStruct *, struct RaAddressStruct **, struct RaAddressStruct *, int);
 extern char *RaPruneAddressTree (struct ArgusLabelerStruct *, struct RaAddressStruct *, int);
 
 extern int RaReadAddressConfig (struct ArgusParserStruct *, struct ArgusLabelerStruct *, char *);
@@ -199,6 +200,7 @@ extern void RaMapLabelMol (struct ArgusLabelerStruct *, struct RaAddressStruct *
 extern void RaPrintLabelMol (struct ArgusLabelerStruct *, struct RaAddressStruct *, int, int, int, int);
 extern void RaPrintLabelTree (struct ArgusLabelerStruct *, struct RaAddressStruct *, int, int);
 
+extern int RaCountryCodeLabel (struct ArgusParserStruct *, struct ArgusRecordStruct *);
 extern char *RaAddressLabel (struct ArgusParserStruct *, struct ArgusRecordStruct *);
 extern char *RaLabelIANAAddressType (struct ArgusParserStruct *, struct ArgusRecordStruct *);
 extern char *RaFetchIPv4AddressLabel(struct ArgusParserStruct *, unsigned int *);

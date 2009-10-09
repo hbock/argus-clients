@@ -87,10 +87,11 @@ int argus_history_is_enabled(void);
 
 #endif
 
-int ArgusCursesEnabled = 1;
 int ArgusTerminalColors = 0;
 int ArgusDisplayStatus = 0;
 #endif
+
+int ArgusCursesEnabled = 1;
 
 void ArgusUpdateScreen(void);
 
@@ -429,9 +430,7 @@ ArgusClientInit (struct ArgusParserStruct *parser)
                   }
                } else
                if (!(strncasecmp (mode->mode, "nocurses", 4))) {
-#if defined(ARGUS_CURSES)
                  ArgusCursesEnabled = 0;
-#endif
                } else
                if (!(strncasecmp (mode->mode, "rmon", 4))) {
                   parser->RaMonMode++;
@@ -473,6 +472,10 @@ ArgusClientInit (struct ArgusParserStruct *parser)
 #if defined(ARGUS_CURSES)
       if (ArgusCursesEnabled)
          RaInitCurses(parser);
+#else
+      if (ArgusCursesEnabled)
+         ArgusLog (LOG_ERR, "ratop not compiled with curses support.  install ncurses and rebuild.");
+      
 #endif
       RaBinProcess->size = size;
 
@@ -736,17 +739,17 @@ RaParseComplete (int sig)
    }
 }
 
+#if defined(ARGUS_CURSES)
 void
 RaResizeHandler (int sig)
 {
-#if defined(ARGUS_CURSES)
    RaScreenResize = TRUE;
-#endif
-   
+
 #ifdef ARGUSDEBUG 
    ArgusDebug (1, "RaResizeHandler(%d)\n", sig);
 #endif
 }
+#endif
 
 
 char *ArgusGenerateProgramArgs(struct ArgusParserStruct *);
@@ -3809,6 +3812,7 @@ usage ()
 #if defined (ARGUSDEBUG)
    fprintf (stderr, "         -D <level>         specify debug level\n");
 #endif
+   fprintf (stderr, "         -M nocurses        run without curses window (useful for debugging)\n");
    fprintf (stderr, "         -R <directory>     recursively process argus data files in directory.\n");
    fprintf (stderr, "         -r <filename>      read argus data filename.\n");
    fprintf (stderr, "         -S <host[:port]>   specify remote argus <host> and optional port\n");

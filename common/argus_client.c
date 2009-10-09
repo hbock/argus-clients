@@ -28,9 +28,9 @@
  */
 
 /* 
- * $Id: //depot/argus/clients/common/argus_client.c#143 $
- * $DateTime: 2009/07/31 11:50:38 $
- * $Change: 1775 $
+ * $Id: //depot/argus/clients/common/argus_client.c#151 $
+ * $DateTime: 2009/09/18 03:22:43 $
+ * $Change: 1802 $
  */
 
 
@@ -205,8 +205,10 @@ ArgusReadSaslStreamSocket (struct ArgusParserStruct *parser, struct ArgusInput *
                         struct ArgusRecordHeader *recv3 = (struct ArgusRecordHeader *) input->ArgusReadPtr;
                         if (input->ArgusReadSocketCnt >= sizeof(*recv3)) {
                            if ((length = ntohs(recv3->len) * 4) > 0) {
-                              if (input->ArgusReadSocketCnt >= length)
+                              if (input->ArgusReadSocketCnt >= length) {
                                  rec = (struct ArgusRecord *) input->ArgusReadPtr;
+                              }
+
                            } else {
                               ArgusLog (LOG_ALERT, "ArgusReadSaslStreamSocket (0x%x) record length is zero");
                               retn = 1;
@@ -217,16 +219,17 @@ ArgusReadSaslStreamSocket (struct ArgusParserStruct *parser, struct ArgusInput *
                   }
 
                   if (rec) {
-                     if (ArgusHandleDatum (ArgusParser, input, rec, &ArgusParser->ArgusFilterCode) == 1)
+                     if ((length = ArgusHandleDatum (ArgusParser, input, rec, &ArgusParser->ArgusFilterCode)) == -1) {
                         retn = 1;
+                     } else {
+                        input->offset += length;
+                        input->ArgusReadPtr += length;
+                        input->ArgusReadSocketCnt -= length;
 
-                     input->offset += length;
-                     input->ArgusReadPtr += length;
-                     input->ArgusReadSocketCnt -= length;
-
-                     if (input->ostop != -1)
-                        if (input->offset > input->ostop)
-                           retn = 1;
+                        if (input->ostop != -1)
+                           if (input->offset > input->ostop)
+                              retn = 1;
+                     }
 
                      rec = NULL;
 
@@ -1380,7 +1383,7 @@ ArgusReadCiscoStreamSocket (struct ArgusParserStruct *parser, struct ArgusInput 
 #ifdef ARGUSDEBUG
                ArgusDebug (7, "ArgusReadCiscoStreamSocket (0x%x) read record complete\n", input);
 #endif
-               if (ArgusHandleDatum (ArgusParser, input, input->ArgusCiscoNetFlowParse (input, &input->ArgusReadPtr), &ArgusParser->ArgusFilterCode))
+               if (ArgusHandleDatum (ArgusParser, input, input->ArgusCiscoNetFlowParse (input, &input->ArgusReadPtr), &ArgusParser->ArgusFilterCode) < 0)
                   return(1);
 
                input->ArgusReadSocketCnt -= size;
@@ -1542,7 +1545,7 @@ ArgusReadCiscoDatagramSocket (struct ArgusParserStruct *parser, struct ArgusInpu
       }
                
       for (i = 0; i < count; i++) {
-         if (ArgusHandleDatum (ArgusParser, input, input->ArgusCiscoNetFlowParse (input, &ptr), &ArgusParser->ArgusFilterCode))
+         if (ArgusHandleDatum (ArgusParser, input, input->ArgusCiscoNetFlowParse (input, &ptr), &ArgusParser->ArgusFilterCode) < 0)
             return(1);
       }
 
@@ -1653,7 +1656,7 @@ ArgusReadStreamSocket (struct ArgusParserStruct *parser, struct ArgusInput *inpu
       input->ArgusReadSocketCnt += cnt;
       
       while (!done) {
-         unsigned short length = 0;
+         int length = 0;
 
          rec = NULL;
 
@@ -1707,20 +1710,21 @@ ArgusReadStreamSocket (struct ArgusParserStruct *parser, struct ArgusInput *inpu
          }
 
          if (rec && !done && !parser->RaParseDone) {
-            if (ArgusHandleDatum (ArgusParser, input, rec, &ArgusParser->ArgusFilterCode) == 1) {
+            if ((length = ArgusHandleDatum (ArgusParser, input, rec, &ArgusParser->ArgusFilterCode)) < 0) {
                retn = 1;
                done = 1;
-            }
+            } else {
+               input->offset += length;
+               input->ArgusReadPtr += length;
+               input->ArgusReadSocketCnt -= length;
 
-            input->offset += length;
-            input->ArgusReadPtr += length;
-            input->ArgusReadSocketCnt -= length;
-
-            if (input->ostop != -1)
-               if (input->offset > input->ostop) {
-                  retn = 1;
-                  done++;
+               if (input->ostop != -1) {
+                  if (input->offset > input->ostop) {
+                     retn = 1;
+                     done++;
+                  }
                }
+            }
 
          } else
             done = 1;
@@ -2356,7 +2360,7 @@ ArgusGetServerSocket (struct ArgusInput *input, int timeout)
          argus.argus_mar.argusid = ARGUS_COOKIE;
 
          if (input->addr.s_addr != 0)
-            argus.argus_mar.thisid  = htonl(input->addr.s_addr);
+            argus.argus_mar.thisid = input->addr.s_addr;
 
          argus.argus_mar.startime.tv_sec = ArgusParser->ArgusGlobalTime.tv_sec;
          argus.argus_mar.now.tv_sec      = ArgusParser->ArgusGlobalTime.tv_sec;
@@ -2367,7 +2371,7 @@ ArgusGetServerSocket (struct ArgusInput *input, int timeout)
          input->major_version = argus.argus_mar.major_version;
          input->minor_version = argus.argus_mar.minor_version;
 
-#ifdef _LITTLE_ENDIAN
+#if defined(_LITTLE_ENDIAN)
          ArgusHtoN(&argus);
 #endif
          bcopy ((char *) &argus, (char *)&input->ArgusInitCon, sizeof (argus));
@@ -2491,7 +2495,9 @@ ArgusGetServerSocket (struct ArgusInput *input, int timeout)
                   input->fd = s;
 
                } else {
+                  in_addr_t saddr;
                   int optval = 1;
+
                   if (setsockopt(s, SOL_SOCKET, SO_KEEPALIVE, (char *)&optval, sizeof(int)) < 0) {
 #ifdef ARGUSDEBUG
                      ArgusDebug (1, "setsockopt(%d, SOL_SOCKET, SO_KEEPALIVE, 0x%x, %d) failed:", s, optval, sizeof(int));
@@ -2512,27 +2518,25 @@ ArgusGetServerSocket (struct ArgusInput *input, int timeout)
                                                        ntohs(server.sin_port), sizeof(server), strerror(errno));
                   }
 
-                  input->addr.s_addr = htonl(input->addr.s_addr);
-                  if ((hp = gethostbyaddr ((char *)&input->addr.s_addr, sizeof (input->addr.s_addr), AF_INET)) != NULL) {
+                  saddr = htonl(input->addr.s_addr);
+                  if ((hp = gethostbyaddr ((char *)&saddr, sizeof (saddr), AF_INET)) != NULL) {
                      input->hostname = strdup(hp->h_name);
                      bcopy ((char *) hp->h_addr, (char *)&server.sin_addr, hp->h_length);
                      server.sin_family = hp->h_addrtype;
                      server.sin_port = portnum;
 #ifdef ARGUSDEBUG
                      ArgusDebug (1, "Trying %s port %d Expecting %s records\n", (hp->h_name) ?
-                                 (hp->h_name) : intoa (input->addr.s_addr), ntohs(portnum), ArgusRecordType); 
+                                 (hp->h_name) : intoa (saddr), ntohs(portnum), ArgusRecordType); 
 #endif
                  } else {
-                     server.sin_addr.s_addr = input->addr.s_addr;
+                     server.sin_addr.s_addr = saddr;
                      server.sin_family = AF_INET;
                      server.sin_port = portnum;
 #ifdef ARGUSDEBUG
                      ArgusDebug (1, "Trying %s port %d Expecting %s records\n", 
-                                   intoa (input->addr.s_addr), ntohs(portnum), ArgusRecordType); 
+                                   intoa (saddr), ntohs(portnum), ArgusRecordType); 
 #endif
                   }
-
-                  input->addr.s_addr = htonl(input->addr.s_addr);
 
                   if ((retn = ArgusConnect (s, (struct sockaddr *)&server, sizeof(server), timeout)) < 0) {
                      ArgusLog(LOG_WARNING, "connect to %s:%hu failed '%s'", inet_ntoa(server.sin_addr), 
@@ -4038,13 +4042,8 @@ ArgusGenerateRecordStruct (struct ArgusParserStruct *parser, struct ArgusInput *
 
                      if (parser->ArgusAggregator != NULL) {
                         value = parser->ArgusAggregator->RaMetricFetchAlgorithm(retn);
-                        if (ArgusFetchDuration == parser->ArgusAggregator->RaMetricFetchAlgorithm) {
-                           if (value == 0)
-                              agr->count = 0;
-                        }
                      } else 
-                        if ((value = ArgusFetchDuration(retn)) == 0)
-                           agr->count = 0;
+                        value = ArgusFetchDuration(retn);
 
                      if (agr->count > 0) {
                         agr->act.maxval             = value;
@@ -4677,7 +4676,7 @@ ArgusGenerateRecord (struct ArgusRecordStruct *rec, unsigned char state, char *b
                            case ARGUS_TCP_PERF:
                            default: {
                               for (x = 0; x < len; x++)
-                                 *dsrptr++ = ((unsigned int *)rec->dsrs[y])[x];
+                                 *dsrptr++ = ((unsigned int *)dsr)[x];
                               break;
                            }
                         }
@@ -4690,6 +4689,7 @@ ArgusGenerateRecord (struct ArgusRecordStruct *rec, unsigned char state, char *b
                            len = 0;
                            break;
                         }
+// Deliberately fall through
                      }
 
                      default:
@@ -4994,7 +4994,7 @@ ArgusGenerateRecord (struct ArgusRecordStruct *rec, unsigned char state, char *b
                      case ARGUS_PSIZE_INDEX: {
                         struct ArgusPacketSizeStruct *psize  = (struct ArgusPacketSizeStruct *) dsr;
 
-                        if ((psize->src.psizemax > 0)  && (psize->dst.psizemax > 0))
+                        if ((psize->src.psizemax > 0) && (psize->dst.psizemax > 0))
                            type = ARGUS_SRCDST_SHORT;
                         else
                         if (psize->src.psizemax > 0)
@@ -5135,20 +5135,20 @@ ArgusGenerateRecord (struct ArgusRecordStruct *rec, unsigned char state, char *b
                         unsigned char subtype = tmpls->hdr.subtype & ~(ARGUS_MPLS_SRC_LABEL | ARGUS_MPLS_DST_LABEL);
 
                         *dsrptr++ = *(unsigned int *)dsr;
-                        tmpls->hdr.argus_dsrvl8.len = 1;
+                        len = 1;
 
                         if (((mpls->hdr.argus_dsrvl8.qual & 0xF0) >> 4) > 0) {
                            subtype |= ARGUS_MPLS_SRC_LABEL;
                            *dsrptr++ = mpls->slabel;
-                           tmpls->hdr.argus_dsrvl8.len++;
+                           len++;
                         }
                         if (((mpls->hdr.argus_dsrvl8.qual & 0x0F)) > 0) {
                            subtype |= ARGUS_MPLS_DST_LABEL;
                            *dsrptr++ = mpls->dlabel;
-                           tmpls->hdr.argus_dsrvl8.len++;
+                           len++;
                         }
                         tmpls->hdr.subtype = subtype;
-                        len = tmpls->hdr.argus_dsrvl8.len;
+                        tmpls->hdr.argus_dsrvl8.len = len;
                         break;
                      }
 
@@ -5401,26 +5401,25 @@ ArgusGenerateRecord (struct ArgusRecordStruct *rec, unsigned char state, char *b
                         struct ArgusIPAttrStruct *tattr = (struct ArgusIPAttrStruct *) dsrptr;
 
                         *dsrptr++ = *(unsigned int *)dsr;
-                        tattr->hdr.argus_dsrvl8.len = 1;
+                        len = 1;
 
                         if (attr->hdr.argus_dsrvl8.qual & ARGUS_IPATTR_SRC) {
                            *dsrptr++ = *(unsigned int *)&attr->src;
-                           tattr->hdr.argus_dsrvl8.len++;
+                           len++;
                         }
                         if (attr->hdr.argus_dsrvl8.qual & ARGUS_IPATTR_SRC_OPTIONS) {
                            *dsrptr++ = attr->src.options;
-                           tattr->hdr.argus_dsrvl8.len++;
+                           len++;
                         }
                         if (attr->hdr.argus_dsrvl8.qual & ARGUS_IPATTR_DST) {
                            *dsrptr++ = *(unsigned int *)&attr->dst;
-                           tattr->hdr.argus_dsrvl8.len++;
+                           len++;
                         }
                         if (attr->hdr.argus_dsrvl8.qual & ARGUS_IPATTR_DST_OPTIONS) {
                            *dsrptr++ = attr->dst.options;
-                           tattr->hdr.argus_dsrvl8.len++;
+                           len++;
                         }
-
-                        len = tattr->hdr.argus_dsrvl8.len;
+                        tattr->hdr.argus_dsrvl8.len = len;
                         break;
                      }
 
@@ -5430,14 +5429,14 @@ ArgusGenerateRecord (struct ArgusRecordStruct *rec, unsigned char state, char *b
                         int labelen = 0;
 
                         *dsrptr++ = *(unsigned int *)dsr;
-                        tlabel->hdr.argus_dsrvl8.len = 1;
+                        len = 1;
                         
                         labelen = strlen(label->l_un.label);
                         bzero ((char *)dsrptr, ((labelen + 3)/4) * 4);
                         bcopy ((char *)label->l_un.label, (char *)dsrptr, labelen);
                         dsrptr += (labelen + 3)/4;
-                        tlabel->hdr.argus_dsrvl8.len += (labelen + 3)/4;
-                        len = tlabel->hdr.argus_dsrvl8.len;
+                        len += (labelen + 3)/4;
+                        tlabel->hdr.argus_dsrvl8.len = len;
                         break;
                      }
                   }
@@ -5452,7 +5451,7 @@ ArgusGenerateRecord (struct ArgusRecordStruct *rec, unsigned char state, char *b
                   if (retn->hdr.len > dsrlen) {
                      int i, cnt = retn->hdr.len - dsrlen;
 #ifdef ARGUSDEBUG
-                     ArgusDebug (2, "ArgusGenerateRecord (0x%x, %d) old len %d new len %d\n", 
+                     ArgusDebug (6, "ArgusGenerateRecord (0x%x, %d) old len %d new len %d\n", 
                         rec, state, retn->hdr.len * 4, dsrlen * 4);
 #endif 
                      for (i = 0; i < cnt; i++) {
@@ -5462,7 +5461,6 @@ ArgusGenerateRecord (struct ArgusRecordStruct *rec, unsigned char state, char *b
                        dsr->argus_dsrvl8.len = 1;
                        dsrlen++;
                      }
-                     
                   }
                }
             }
@@ -6714,7 +6712,7 @@ ArgusProcessARPAvailability (struct ArgusParserStruct *parser, struct ArgusRecor
 }
 
 
-long long RaGetuSecAvgDuration (struct ArgusRecordStruct *);
+long long RaGetuSecMean (struct ArgusRecordStruct *);
 long long RaGetuSecDeltaDuration (struct ArgusRecordStruct *);
 
 long long
@@ -6727,7 +6725,7 @@ RaGetActiveDuration (struct ArgusRecordStruct *argus)
 
 
 long long
-RaGetuSecAvgDuration (struct ArgusRecordStruct *argus)
+RaGetuSecMean (struct ArgusRecordStruct *argus)
 {
    long long retn = 0;
 
@@ -6846,9 +6844,9 @@ ArgusHistoMetricParse (struct ArgusParserStruct *parser, struct ArgusAggregatorS
                case ARGUSMETRICSTARTTIME:
                case ARGUSMETRICLASTTIME:
                case ARGUSMETRICDURATION:
-               case ARGUSMETRICAVGDURATION:
-               case ARGUSMETRICMINDURATION:
-               case ARGUSMETRICMAXDURATION:
+               case ARGUSMETRICMEAN:
+               case ARGUSMETRICMIN:
+               case ARGUSMETRICMAX:
                   parser->RaHistoStart *= 60.0;
                   parser->RaHistoEnd   *= 60.0;
                   break;
@@ -6914,17 +6912,13 @@ ArgusHistoMetricParse (struct ArgusParserStruct *parser, struct ArgusAggregatorS
 
 
 int
-ArgusHistoTallyMetric (struct ArgusParserStruct *parser, struct ArgusRecordStruct *ns)
+ArgusHistoTallyMetric (struct ArgusParserStruct *parser, struct ArgusRecordStruct *ns, double value)
 {
    int retn = 0, i = 0;
    double start, bsize;
-   double value, iptr;
+   double iptr;
 
-   if (parser && parser->ArgusAggregator && (ns != NULL)) {
-      value = parser->ArgusAggregator->RaMetricFetchAlgorithm(ns);
-
-      ns->dsrs[ARGUS_AGR_INDEX] = NULL;
-
+   if (parser && (ns != NULL)) {
       if (parser->RaHistoMetricLog) {
          value = log10(value);
          start = parser->RaHistoStartLog;
@@ -6941,11 +6935,13 @@ ArgusHistoTallyMetric (struct ArgusParserStruct *parser, struct ArgusRecordStruc
 
          if ((i = iptr) > parser->RaHistoBins)
             i = parser->RaHistoBins;
-         i++;
+
+         if (value < parser->RaHistoEnd)
+            i++;
       }
    }
 
-      if (parser->RaHistoRecords[i] != NULL) {
+   if (parser->RaHistoRecords[i] != NULL) {
       ArgusMergeRecords (parser->ArgusAggregator, parser->RaHistoRecords[i], ns);
    } else
       parser->RaHistoRecords[i] = ArgusCopyRecordStruct(ns);
@@ -7274,53 +7270,93 @@ ArgusMergeAddress(unsigned int *a1, unsigned int *a2, int type, int dir)
 
 
 
-char ArgusMergeLabelBuf[MAXSTRLEN];
-char *ArgusMergeLabel(struct ArgusLabelStruct *, struct ArgusLabelStruct *);
+char *ArgusMergeLabel(struct ArgusLabelStruct *, struct ArgusLabelStruct *, char *buf, int len);
 
 char *
-ArgusMergeLabel(struct ArgusLabelStruct *l1, struct ArgusLabelStruct *l2)
+ArgusMergeLabel(struct ArgusLabelStruct *l1, struct ArgusLabelStruct *l2, char *buf, int len)
 {
    char l1buf[MAXSTRLEN], l2buf[MAXSTRLEN];
    char *retn = NULL, *ptr, *sptr, *obj, *label;
+   char *l1labs[256][3], *l2labs[256][3];
+
    int l1len = strlen(l1->l_un.label);
    int l2len = strlen(l2->l_un.label);
+   int l1labsindex = 0, l2labsindex = 0;
+   int i, x, y, z; 
 
    bzero(l1buf, MAXSTRLEN);
    bzero(l2buf, MAXSTRLEN);
-   bzero(ArgusMergeLabelBuf, MAXSTRLEN);
+   bzero(l1labs, sizeof(l1labs));
+   bzero(l2labs, sizeof(l2labs));
 
    bcopy(l1->l_un.label, l1buf, l1len);
    bcopy(l2->l_un.label, l2buf, l2len);
 
    ptr = l1buf;
    while ((obj = strtok(ptr, ":")) != NULL) {
-      if ((sptr = strchr(obj, '=')) != NULL) {
-         *sptr = '\0';
-         label = sptr + 1;
-      } else {
-         label = obj;
-         obj = NULL;
-      }
-      if (obj) {
-         char *l2obj = NULL, *eptr;
-         if ((l2obj = strstr(l2buf, obj)) != NULL) {
-            if ((eptr = strchr(l2obj, '=')) != NULL) {
-               eptr++;
-               if (!strcmp(eptr, label)) {
-                  sprintf (&ArgusMergeLabelBuf[strlen(ArgusMergeLabelBuf)], "%s=%s", obj, label);
-                  retn = ArgusMergeLabelBuf;
-               } else {
-/*
-*/
-               }
-            } else {
-               ptr = NULL;
-            }
+      if (l1labsindex < 256) {
+         if ((sptr = strchr(obj, '=')) != NULL) {
+            *sptr = '\0';
+            label = sptr + 1;
          } else {
-            ptr = NULL;
+            label = obj;
+            obj = NULL;
          }
+         l1labs[l1labsindex][0] = obj;
+         l1labs[l1labsindex][1] = label;
+         l1labsindex++;
       }
       ptr = NULL;
+   }
+
+   ptr = l2buf;
+   while ((obj = strtok(ptr, ":")) != NULL) {
+      if (l2labsindex < 256) {
+         if ((sptr = strchr(obj, '=')) != NULL) {
+            *sptr = '\0';
+            label = sptr + 1;
+         } else {
+            label = obj;
+            obj = NULL;
+         }
+         l2labs[l2labsindex][0] = obj;
+         l2labs[l2labsindex][1] = label;
+         l2labsindex++;
+      }
+      ptr = NULL;
+   }
+
+   for (i = 0; i < l2labsindex; i++) {
+      if (l2labs[i][0] != NULL) {
+         for (y = 0; y < l1labsindex; y++) {
+            if (l1labs[y][0] != NULL) {
+               if (!(strcmp(l1labs[y][0], l2labs[i][0]))) {
+                  if (strcmp(l1labs[y][1], l2labs[i][1]))
+                     l1labs[y][0] = NULL;
+                     l1labs[y][1] = NULL;
+                  break;
+               }
+            }
+         }
+      }
+   }
+
+   for (i = 0, z = 0; i < l1labsindex; i++) {
+      if (l1labs[i][1] != NULL) {
+         if (l1labs[i][0] != NULL) {
+            if (z > 0) 
+               sprintf (&buf[strlen(buf)], ":%s=%s", l1labs[i][0], l1labs[i][1]);
+            else
+               sprintf (&buf[strlen(buf)], "%s=%s", l1labs[i][0], l1labs[i][1]);
+         } else {
+            if (z > 0) 
+               sprintf (&buf[strlen(buf)], ":%s", l1labs[i][1]);
+            else
+               sprintf (&buf[strlen(buf)], "%s", l1labs[i][1]);
+         }
+         retn = buf;
+         z++;
+      }
    }
 
    return (retn);
@@ -8605,6 +8641,30 @@ struct udt_control_handshake {
                }
                break;
             }
+
+            case ARGUS_COCODE_INDEX: {
+               struct ArgusCountryCodeStruct *c1 = (void *) ns1->dsrs[ARGUS_COCODE_INDEX];
+               struct ArgusCountryCodeStruct *c2 = (void *) ns2->dsrs[ARGUS_COCODE_INDEX];
+               
+               if (c1 && c2) {
+                  if (bcmp(c1->src, c2->src, sizeof(c1->src)))
+                     bzero(&c1->src, sizeof(c1->src));
+                  if (bcmp(c1->dst, c2->src, sizeof(c1->dst)))
+                     bzero(&c1->dst, sizeof(c1->dst));
+                  
+               } else
+               if (c2) {
+                  int len = c2->hdr.argus_dsrvl8.len;
+
+                  if ((c1 = ArgusCalloc(1, len * 4)) == NULL)
+                     ArgusLog (LOG_ERR, "ArgusMergeRecords: ArgusCalloc error %s", strerror(errno));
+                  bcopy ((char *)c2, (char *)c2, len * 4);
+
+                  ns1->dsrs[ARGUS_COCODE_INDEX] = (struct ArgusDSRHeader *) c1;
+                  ns1->dsrindex |= (0x01 << ARGUS_COCODE_INDEX);
+               }
+               break;
+            }
 /*                            
    Merging the label object is a intersection of the label objects in
    the two records.  The only other workable solution is the union of
@@ -8620,27 +8680,33 @@ struct udt_control_handshake {
    specification.  So
    
 */  
+
             case ARGUS_LABEL_INDEX: {
                struct ArgusLabelStruct *l1 = (void *) ns1->dsrs[ARGUS_LABEL_INDEX];
                struct ArgusLabelStruct *l2 = (void *) ns2->dsrs[ARGUS_LABEL_INDEX];
 
                if (l1 && l2) {
                   int l1len = strlen(l1->l_un.label);
-                  char *ptr = NULL;
 
                   if (strcmp(l1->l_un.label, l2->l_un.label)) {
-                     if ((ptr = ArgusMergeLabel(l1, l2)) != NULL) {
+                     char buf[MAXSTRLEN];
+                     bzero(buf, sizeof(buf));
+
+                     if ((ArgusMergeLabel(l1, l2, buf, MAXSTRLEN)) != NULL) {
                         bzero(l1->l_un.label, l1len);
-                        bcopy(ptr, l1->l_un.label, strlen(ptr));
+                        bcopy(buf, l1->l_un.label, strlen(buf));
                      }
                   }
 
                } else {
-                  if (l1 == NULL) {
-                     ns1->dsrs[ARGUS_LABEL_INDEX] = ns2->dsrs[ARGUS_LABEL_INDEX];;
-                     ns1->dsrindex |= (0x01 << ARGUS_LABEL_INDEX);
-                     ns2->dsrindex &= ~(0x01 << ARGUS_LABEL_INDEX);
-                     ns2->dsrs[ARGUS_LABEL_INDEX] = NULL;
+                  if (l2 && (l1 == NULL)) {
+                     ns1->dsrs[ARGUS_LABEL_INDEX] = calloc(1, sizeof(struct ArgusLabelStruct));
+                     l1 = (void *) ns1->dsrs[ARGUS_LABEL_INDEX];
+
+                     bcopy(l2, l1, sizeof(*l2));
+
+                     if (l2->l_un.label)
+                        l1->l_un.label = strdup(l2->l_un.label);
                   }
                }
                break;
@@ -11099,8 +11165,8 @@ ArgusParseAggregator (struct ArgusParserStruct *parser, char *file, char *buf[])
             if (name)
                agg->name = name;
 
-            agg->pres = "yes";
             if (pres) {
+               agg->pres = "yes";
                if (!(strncasecmp(pres, "no", 2)))
                   agg->pres = NULL;
             }
@@ -11165,6 +11231,21 @@ ArgusParseAggregator (struct ArgusParserStruct *parser, char *file, char *buf[])
 
    if ((agg = ArgusNewAggregator(parser, NULL)) == NULL)
       ArgusLog (LOG_ERR, "ArgusClientInit: ArgusNewAggregator error");
+
+   if (name)
+      agg->name = name;
+
+   if (pres) {
+      agg->pres = "yes";
+      if (!(strncasecmp(pres, "no", 2)))
+         agg->pres = NULL;
+   }
+
+   if (report)
+      agg->report = report;
+
+   if (correct)
+      agg->correct = correct;
 
    if (retn != NULL) {
       struct ArgusAggregatorStruct *tagg = retn;
@@ -11369,7 +11450,7 @@ ArgusFetchLastTime (struct ArgusRecordStruct *ns)
 }
 
 double
-ArgusFetchAvgDuration (struct ArgusRecordStruct *ns)
+ArgusFetchMean (struct ArgusRecordStruct *ns)
 {
    double retn = 0;
 
@@ -11379,14 +11460,12 @@ ArgusFetchAvgDuration (struct ArgusRecordStruct *ns)
 
       if ((agr = (struct ArgusAgrStruct *) ns->dsrs[ARGUS_AGR_INDEX]) != NULL)
          retn = agr->act.meanval;
-      else
-         retn = RaGetFloatDuration (ns);
    }
    return retn;
 }
 
 double
-ArgusFetchMinDuration (struct ArgusRecordStruct *ns)
+ArgusFetchMin (struct ArgusRecordStruct *ns)
 {
    double retn = 0;
 
@@ -11396,14 +11475,12 @@ ArgusFetchMinDuration (struct ArgusRecordStruct *ns)
 
       if ((agr = (struct ArgusAgrStruct *) ns->dsrs[ARGUS_AGR_INDEX]) != NULL)
          retn = agr->act.minval;
-      else
-         retn = RaGetFloatDuration (ns);
    }
    return retn;
 }
 
 double
-ArgusFetchMaxDuration (struct ArgusRecordStruct *ns)
+ArgusFetchMax (struct ArgusRecordStruct *ns)
 {
    double retn = 0;
 
@@ -11413,8 +11490,6 @@ ArgusFetchMaxDuration (struct ArgusRecordStruct *ns)
 
       if ((agr = (struct ArgusAgrStruct *) ns->dsrs[ARGUS_AGR_INDEX]) != NULL)
          retn = agr->act.maxval;
-      else
-         retn = RaGetFloatDuration (ns);
    }
    return (retn);
 }
@@ -14051,42 +14126,42 @@ ArgusSortLastTime (struct ArgusRecordStruct *n1, struct ArgusRecordStruct *n2)
    return (ArgusReverseSortDir ? ((retn > 0) ? -1 : ((retn == 0) ? 0 : 1)) : retn);
 }
 
-int ArgusSortAvgDuration (struct ArgusRecordStruct *n2, struct ArgusRecordStruct *n1)
+int ArgusSortMean (struct ArgusRecordStruct *n2, struct ArgusRecordStruct *n1)
 {
    float ad1 = 0.0, ad2 = 0.0;
    int retn = 0;
  
    if (n1 && n2) {
-      ad1 = RaGetFloatAvgDuration(n1);
-      ad2 = RaGetFloatAvgDuration(n2);
+      ad1 = RaGetFloatMean(n1);
+      ad2 = RaGetFloatMean(n2);
       retn = (ad1 > ad2) ? 1 : ((ad1 == ad2) ? 0 : -1);
    }
  
    return (ArgusReverseSortDir ? ((retn > 0) ? -1 : ((retn == 0) ? 0 : 1)) : retn);
 }
 
-int ArgusSortMinDuration (struct ArgusRecordStruct *n2, struct ArgusRecordStruct *n1)
+int ArgusSortMin (struct ArgusRecordStruct *n2, struct ArgusRecordStruct *n1)
 {
    float ad1 = 0.0, ad2 = 0.0;
    int retn = 0;
  
    if (n1 && n2) {
-      ad1 = RaGetFloatMinDuration(n1);
-      ad2 = RaGetFloatMinDuration(n2);
+      ad1 = RaGetFloatMin(n1);
+      ad2 = RaGetFloatMin(n2);
       retn = (ad1 > ad2) ? 1 : ((ad1 == ad2) ? 0 : -1);
    }
  
    return (ArgusReverseSortDir ? ((retn > 0) ? -1 : ((retn == 0) ? 0 : 1)) : retn);
 }
 
-int ArgusSortMaxDuration (struct ArgusRecordStruct *n2, struct ArgusRecordStruct *n1)
+int ArgusSortMax (struct ArgusRecordStruct *n2, struct ArgusRecordStruct *n1)
 {
    float ad1 = 0.0, ad2 = 0.0;
    int retn = 0;
  
    if (n1 && n2) {
-      ad1 = RaGetFloatMaxDuration(n1);
-      ad2 = RaGetFloatMaxDuration(n2);
+      ad1 = RaGetFloatMax(n1);
+      ad2 = RaGetFloatMax(n2);
       retn = (ad1 > ad2) ? 1 : ((ad1 == ad2) ? 0 : -1);
    }
  

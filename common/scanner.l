@@ -17,9 +17,9 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
- * $Id: //depot/argus/clients/common/scanner.l#35 $
- * $DateTime: 2009/07/31 11:50:38 $
- * $Change: 1775 $
+ * $Id: //depot/argus/clients/common/scanner.l#36 $
+ * $DateTime: 2009/08/09 23:36:01 $
+ * $Change: 1778 $
  */
 
 /*
@@ -258,6 +258,7 @@ timexed      return TIMEXED;
 "<<"         return LSH;
 ">>"         return RSH;
 {N}         { yylval.i  = stoi((char *)yytext); return NUM; }
+(\.{N})      { yylval.f  = strtof((char *)yytext, NULL); return FLOAT; }
 ({N}\.{N})  { yylval.f  = strtof((char *)yytext, NULL); return FLOAT; }
 ({N}\.{N}\.{N}\.{N})   { yylval.s = Argussdup((char *)yytext); return HIDV4; }
 {B}:{B}:{B}:{B}:{B}:{B} { yylval.e = argus_ether_aton((char *)yytext); return EID; }

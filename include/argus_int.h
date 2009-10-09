@@ -55,43 +55,6 @@ struct ArgusInterfaceStruct {
 
 #define MIN_SNAPLEN 96
 
-#ifdef ArgusMain
-
-struct ArgusInterfaceStruct ArgusInterfaceTypes [] = {
-{  0, "DLT_NULL", "no link-layer encapsulation"},
-{  1, "DLT_EN10MB", "Ethernet (10Mb)"},
-{  2, "DLT_EN3MB", "Experimental Ethernet (3Mb)"},
-{  3, "DLT_AX25", "Amateur Radio AX.25"},
-{  4, "DLT_PRONET", "Proteon ProNET Token Ring"},
-{  5, "DLT_CHAOS", "Chaos"},
-{  6, "DLT_IEEE802", "IEEE 802 Networks"},
-{  7, "DLT_ARCNET", "ARCNET"},
-{  8, "DLT_SLIP", "Serial Line IP"},
-{  9, "DLT_PPP",  "Point-to-point Protocol"},
-{ 10,"DLT_FDDI", "FDDI"},
-{ 11, "DLT_ATM_RFC1483", "LLC/SNAP encapsulated atm"},
-{ 12, "DLT_LOOP", "loopback"},
-{ 13, "DLT_SLIP_BSDOS", "BSD/OS Serial Line IP"},
-{ 14, "DLT_PPP_BSDOS", "BSD/OS Point-to-point"},
-{ 15, "DLT_SLIP_BSDOS", "BSD/OS Serial Line IP"},
-{ 16, "DLT_PPP_BSDOS", "BSD/OS Point-to-point"},
-{ 19, "DLT_ATM_CLIP", "Linux Classical-IP over ATM"},
-{ 50, "DLT_PPP_SERIAL", "PPP over Serial with HDLC"},
-{ 51, "DLT_PPP_ETHER", "PPP over Ethernet"},
-
-{100, "DLT_ATM_RFC1483", "LLC/SNAP encapsulated atm"},
-{101, "DLT_RAW", "raw IP"},
-{102, "DLT_SLIP_BSDOS", "BSD/OS Serial Line IP"},
-{103, "DLT_PPP_BSDOS", "BSD/OS Point-to-point Protocol"},
-{104, "DLT_CHDLC", "Cisco HDLC"},
-{105, "DLT_IEEE802_11", "IEE 802.11 wireless"},
-{-1, "Undefined", "Undefined"},
-};
-
-#else
-extern struct ArgusInterfaceStruct ArgusInterfaceTypes[];
-#endif
-
 #ifndef min
 #define min(a,b) ((a)>(b)?(b):(a))
 #define max(a,b) ((b)>(a)?(b):(a))

@@ -42,8 +42,8 @@
 #include <argus_out.h>
 #include <cons_out.h>
 
-#define ARGUS_MAX_PRINT_ALG     	172
-#define MAX_PRINT_ALG_TYPES     	172
+#define ARGUS_MAX_PRINT_ALG     	173
+#define MAX_PRINT_ALG_TYPES     	173
 
 
 #include <CflowdFlowPdu.h>
@@ -214,6 +214,7 @@ long thiszone;
 void ArgusParseArgs (struct ArgusParserStruct *, int, char **);
 
 
+void ArgusPrintCause (struct ArgusParserStruct *, char *, struct ArgusRecordStruct *, int);
 void ArgusPrintStartDate (struct ArgusParserStruct *, char *, struct ArgusRecordStruct *, int);
 void ArgusPrintLastDate (struct ArgusParserStruct *, char *, struct ArgusRecordStruct *, int);
 void ArgusPrintSrcStartDate (struct ArgusParserStruct *, char *, struct ArgusRecordStruct *, int);
@@ -356,9 +357,9 @@ void ArgusPrintSrcWindow (struct ArgusParserStruct *, char *, struct ArgusRecord
 void ArgusPrintDstWindow (struct ArgusParserStruct *, char *, struct ArgusRecordStruct *, int);
 void ArgusPrintJoinDelay (struct ArgusParserStruct *, char *, struct ArgusRecordStruct *, int);
 void ArgusPrintLeaveDelay (struct ArgusParserStruct *, char *, struct ArgusRecordStruct *, int);
-void ArgusPrintAvgDuration (struct ArgusParserStruct *, char *, struct ArgusRecordStruct *, int);
-void ArgusPrintMinDuration (struct ArgusParserStruct *, char *, struct ArgusRecordStruct *, int);
-void ArgusPrintMaxDuration (struct ArgusParserStruct *, char *, struct ArgusRecordStruct *, int);
+void ArgusPrintMean (struct ArgusParserStruct *, char *, struct ArgusRecordStruct *, int);
+void ArgusPrintMin (struct ArgusParserStruct *, char *, struct ArgusRecordStruct *, int);
+void ArgusPrintMax (struct ArgusParserStruct *, char *, struct ArgusRecordStruct *, int);
 void ArgusPrintStdDeviation (struct ArgusParserStruct *, char *, struct ArgusRecordStruct *, int);
 void ArgusPrintStartRange (struct ArgusParserStruct *, char *, struct ArgusRecordStruct *, int);
 void ArgusPrintEndRange (struct ArgusParserStruct *, char *, struct ArgusRecordStruct *, int);
@@ -400,6 +401,7 @@ void ArgusPrintSrcAsn (struct ArgusParserStruct *, char *, struct ArgusRecordStr
 void ArgusPrintDstAsn (struct ArgusParserStruct *, char *, struct ArgusRecordStruct *, int);
 void ArgusPrintInodeAsn (struct ArgusParserStruct *, char *, struct ArgusRecordStruct *, int);
 
+void ArgusPrintCauseLabel (struct ArgusParserStruct *, char *, int);
 void ArgusPrintStartDateLabel (struct ArgusParserStruct *, char *, int);
 void ArgusPrintLastDateLabel (struct ArgusParserStruct *, char *, int);
 void ArgusPrintSrcStartDateLabel (struct ArgusParserStruct *, char *, int);
@@ -540,9 +542,9 @@ void ArgusPrintSrcWindowLabel (struct ArgusParserStruct *, char *, int);
 void ArgusPrintDstWindowLabel (struct ArgusParserStruct *, char *, int);
 void ArgusPrintJoinDelayLabel (struct ArgusParserStruct *, char *, int);
 void ArgusPrintLeaveDelayLabel (struct ArgusParserStruct *, char *, int);
-void ArgusPrintAvgDurationLabel (struct ArgusParserStruct *, char *, int);
-void ArgusPrintMinDurationLabel (struct ArgusParserStruct *, char *, int);
-void ArgusPrintMaxDurationLabel (struct ArgusParserStruct *, char *, int);
+void ArgusPrintMeanLabel (struct ArgusParserStruct *, char *, int);
+void ArgusPrintMinLabel (struct ArgusParserStruct *, char *, int);
+void ArgusPrintMaxLabel (struct ArgusParserStruct *, char *, int);
 void ArgusPrintStdDeviationLabel (struct ArgusParserStruct *, char *, int);
 void ArgusPrintStartRangeLabel (struct ArgusParserStruct *, char *, int);
 void ArgusPrintEndRangeLabel (struct ArgusParserStruct *, char *, int);
@@ -592,12 +594,12 @@ RaPrintAlgorithmTable[MAX_PRINT_ALG_TYPES] = {
    { "trans", "", 6 , 1, 0, ARGUSPRINTTRANSACTIONS, ArgusPrintTransactions, ArgusPrintTransactionsLabel, "int unsigned"},
 #define ARGUSPRINTDURATION		3
    { "dur", "", 10 , 1, 0, ARGUSPRINTDURATION, ArgusPrintDuration, ArgusPrintDurationLabel, "double(18,6) not null"},
-#define ARGUSPRINTAVGDURATION		4
-   { "avgdur", "", 10 , 1, 0, ARGUSPRINTAVGDURATION, ArgusPrintAvgDuration, ArgusPrintAvgDurationLabel, "double"},
-#define ARGUSPRINTMINDURATION		5
-   { "mindur", "", 10 , 1, 0, ARGUSPRINTMINDURATION, ArgusPrintMinDuration, ArgusPrintMinDurationLabel, "double"},
-#define ARGUSPRINTMAXDURATION		6
-   { "maxdur", "", 10 , 1, 0, ARGUSPRINTMAXDURATION, ArgusPrintMaxDuration, ArgusPrintMaxDurationLabel, "double"},
+#define ARGUSPRINTMEAN		        4
+   { "mean", "", 10 , 1, 0, ARGUSPRINTMEAN, ArgusPrintMean, ArgusPrintMeanLabel, "double"},
+#define ARGUSPRINTMIN			5
+   { "min", "", 10 , 1, 0, ARGUSPRINTMIN, ArgusPrintMin, ArgusPrintMinLabel, "double"},
+#define ARGUSPRINTMAX			6
+   { "max", "", 10 , 1, 0, ARGUSPRINTMAX, ArgusPrintMax, ArgusPrintMaxLabel, "double"},
 #define ARGUSPRINTSRCADDR		7
    { "saddr", "", 18 , 1, 0, ARGUSPRINTSRCADDR, ArgusPrintSrcAddr, ArgusPrintSrcAddrLabel, "varchar(64) not null"},
 #define ARGUSPRINTDSTADDR		8
@@ -923,11 +925,13 @@ RaPrintAlgorithmTable[MAX_PRINT_ALG_TYPES] = {
 #define ARGUSPRINTAUTOID		168
    { "autoid", "", 6, 1, 0, ARGUSPRINTAUTOID, ArgusPrintAutoId, ArgusPrintAutoIdLabel, "int not null auto_increment"},
 #define ARGUSPRINTSRCASN		169
-   { "sas", "", 5 , 1, 0, ARGUSPRINTSRCASN, ArgusPrintSrcAsn, ArgusPrintSrcAsnLabel, "tinyint unsigned"},
+   { "sas", "", 5 , 1, 0, ARGUSPRINTSRCASN, ArgusPrintSrcAsn, ArgusPrintSrcAsnLabel, "int unsigned"},
 #define ARGUSPRINTDSTASN		170
-   { "das", "", 5 , 1, 0, ARGUSPRINTDSTASN, ArgusPrintDstAsn, ArgusPrintDstAsnLabel, "tinyint unsigned"},
+   { "das", "", 5 , 1, 0, ARGUSPRINTDSTASN, ArgusPrintDstAsn, ArgusPrintDstAsnLabel, "int unsigned"},
 #define ARGUSPRINTINODEASN		171
-   { "ias", "", 5 , 1, 0, ARGUSPRINTINODEASN, ArgusPrintInodeAsn, ArgusPrintInodeAsnLabel, "tinyint unsigned"},
+   { "ias", "", 5 , 1, 0, ARGUSPRINTINODEASN, ArgusPrintInodeAsn, ArgusPrintInodeAsnLabel, "int unsigned"},
+#define ARGUSPRINTCAUSE			172
+   { "cause", "", 7 , 1, 0, ARGUSPRINTCAUSE, ArgusPrintCause, ArgusPrintCauseLabel, "varchar(8)"},
 };
 
 
@@ -1101,8 +1105,8 @@ void ArgusV2HtoN (struct ArgusV2Record *);
 #define ARGUSPRINTTRANSACTIONS		2
 #define ARGUSPRINTDURATION		3
 #define ARGUSPRINTAVGDURATION		4
-#define ARGUSPRINTMINDURATION		5
-#define ARGUSPRINTMAXDURATION		6
+#define ARGUSPRINTMIN			5
+#define ARGUSPRINTMAX			6
 #define ARGUSPRINTSRCADDR		7
 #define ARGUSPRINTDSTADDR		8
 #define ARGUSPRINTPROTO			9
@@ -1287,6 +1291,7 @@ extern void ArgusDump (const u_char *, int, char *);
 
 extern void ArgusMainInit (struct ArgusParserStruct *, int, char **);
 
+extern void ArgusPrintCause (struct ArgusParserStruct *, char *, struct ArgusRecordStruct *, int, int);
 extern void ArgusPrintDate (struct ArgusParserStruct *, char *, struct ArgusRecordStruct *, int, int);
 extern void ArgusPrintStartDate (struct ArgusParserStruct *, char *, struct ArgusRecordStruct *, int);
 extern void ArgusPrintLastDate (struct ArgusParserStruct *, char *, struct ArgusRecordStruct *, int);
@@ -1394,7 +1399,7 @@ extern void ArgusPrintSrcWindow (struct ArgusParserStruct *, char *, struct Argu
 extern void ArgusPrintDstWindow (struct ArgusParserStruct *, char *, struct ArgusRecordStruct *, int);
 extern void ArgusPrintJoinDelay (struct ArgusParserStruct *, char *, struct ArgusRecordStruct *, int);
 extern void ArgusPrintLeaveDelay (struct ArgusParserStruct *, char *, struct ArgusRecordStruct *, int);
-extern void ArgusPrintAvgDuration (struct ArgusParserStruct *, char *, struct ArgusRecordStruct *, int);
+extern void ArgusPrintMean (struct ArgusParserStruct *, char *, struct ArgusRecordStruct *, int);
 extern void ArgusPrintStartRange (struct ArgusParserStruct *, char *, struct ArgusRecordStruct *, int);
 extern void ArgusPrintEndRange (struct ArgusParserStruct *, char *, struct ArgusRecordStruct *, int);
 extern void ArgusPrintSrcDuration (struct ArgusParserStruct *, char *, struct ArgusRecordStruct *, int);
@@ -1410,10 +1415,11 @@ extern void ArgusPrintTCPRTT (struct ArgusParserStruct *, char *, struct ArgusRe
 extern void ArgusPrintTCPSrcMax (struct ArgusParserStruct *, char *, struct ArgusRecordStruct *, int);
 extern void ArgusPrintTCPDstMax (struct ArgusParserStruct *, char *, struct ArgusRecordStruct *, int);
 extern void ArgusPrintInode (struct ArgusParserStruct *, char *, struct ArgusRecordStruct *, int);
-extern void ArgusPrintMinDuration (struct ArgusParserStruct *, char *, struct ArgusRecordStruct *, int);
-extern void ArgusPrintMaxDuration (struct ArgusParserStruct *, char *, struct ArgusRecordStruct *, int);
+extern void ArgusPrintMin (struct ArgusParserStruct *, char *, struct ArgusRecordStruct *, int);
+extern void ArgusPrintMax (struct ArgusParserStruct *, char *, struct ArgusRecordStruct *, int);
 extern void ArgusPrintStdDeviation (struct ArgusParserStruct *, char *, struct ArgusRecordStruct *, int);
 
+extern void ArgusPrintCauseLabel (struct ArgusParserStruct *, char *, int);
 extern void ArgusPrintDateLabel (struct ArgusParserStruct *, char *, int);
 extern void ArgusPrintStartDateLabel (struct ArgusParserStruct *, char *, int);
 extern void ArgusPrintLastDateLabel (struct ArgusParserStruct *, char *, int);
@@ -1519,7 +1525,7 @@ extern void ArgusPrintSrcWindowLabel (struct ArgusParserStruct *, char *, int);
 extern void ArgusPrintDstWindowLabel (struct ArgusParserStruct *, char *, int);
 extern void ArgusPrintJoinDelayLabel (struct ArgusParserStruct *, char *, int);
 extern void ArgusPrintLeaveDelayLabel (struct ArgusParserStruct *, char *, int);
-extern void ArgusPrintAvgDurationLabel (struct ArgusParserStruct *, char *, int);
+extern void ArgusPrintMeanLabel (struct ArgusParserStruct *, char *, int);
 extern void ArgusPrintStartRangeLabel (struct ArgusParserStruct *, char *, int);
 extern void ArgusPrintEndRangeLabel (struct ArgusParserStruct *, char *, int);
 extern void ArgusPrintSrcDurationLabel (struct ArgusParserStruct *, char *, int);
@@ -1535,8 +1541,8 @@ extern void ArgusPrintTCPRTTLabel (struct ArgusParserStruct *, char *, int);
 extern void ArgusPrintTCPSrcMaxLabel (struct ArgusParserStruct *, char *, int);
 extern void ArgusPrintTCPDstMaxLabel (struct ArgusParserStruct *, char *, int);
 extern void ArgusPrintInodeLabel (struct ArgusParserStruct *, char *, int);
-extern void ArgusPrintMinDurationLabel (struct ArgusParserStruct *, char *, int);
-extern void ArgusPrintMaxDurationLabel (struct ArgusParserStruct *, char *, int);
+extern void ArgusPrintMinLabel (struct ArgusParserStruct *, char *, int);
+extern void ArgusPrintMaxLabel (struct ArgusParserStruct *, char *, int);
 extern void ArgusPrintStdDeviationLabel (struct ArgusParserStruct *, char *, int);
 extern void ArgusPrintAutoId (struct ArgusParserStruct *, char *, int);
 

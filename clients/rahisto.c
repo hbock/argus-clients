@@ -25,9 +25,9 @@
  * written by Carter Bullard
  * QoSient, LLC
  * 
- * $Id: //depot/argus/clients/clients/rahisto.c#30 $
- * $DateTime: 2009/07/22 18:40:35 $
- * $Change: 1767 $
+ * $Id: //depot/argus/clients/clients/rahisto.c#33 $
+ * $DateTime: 2009/09/13 22:17:09 $
+ * $Change: 1799 $
  */
 
 
@@ -58,6 +58,7 @@
 struct RaBinProcessStruct *RaBinProcess = NULL;
 int ArgusProcessOutLayers = 0;
 int ArgusProcessNoZero = 0;
+int ArgusPrintInterval = 0;
 int RaValuesAreIntegers = 1;
 
 long long RaNumberOfValues  = 0;
@@ -75,6 +76,10 @@ ArgusClientInit (struct ArgusParserStruct *parser)
    parser->RaWriteOut = 0;
  
    if (!(parser->RaInitialized)) {
+
+      if (parser->Hstr == NULL)
+         usage();
+
       (void) signal (SIGHUP,  (void (*)(int)) RaParseComplete);
       (void) signal (SIGTERM, (void (*)(int)) RaParseComplete);
       (void) signal (SIGQUIT, (void (*)(int)) RaParseComplete);
@@ -82,6 +87,8 @@ ArgusClientInit (struct ArgusParserStruct *parser)
  
       if ((mode = parser->ArgusModeList) != NULL) {
          while (mode) {
+            if (!(strncasecmp (mode->mode, "interval", 8)))
+               ArgusPrintInterval = 1;
             if (!(strncasecmp (mode->mode, "nozero", 6)))
                ArgusProcessNoZero = 1;
             if (!(strncasecmp (mode->mode, "outlayer", 8)))
@@ -174,6 +181,7 @@ RaParseComplete (int sig)
                      char *stdStr = NULL, *maxValStr = NULL, *minValStr = NULL;
                      char *modeStr = NULL;
                      long long ind;
+                     char c;
 
                      sprintf (buf, "%-.*f", pflag, tagr->act.stdev);
                      stdStr = strdup(buf);
@@ -234,31 +242,62 @@ RaParseComplete (int sig)
                      if (percentStr && (len < (tlen = strlen(percentStr)))) len = tlen;
                      if (stdStr && (len < (tlen = strlen(stdStr))))         len = tlen;
 
-                     printf (" N = %-6d  mean = %*s  stddev = %*s  max = %s  min = %s\n",
-                                  tagr->act.n, len, meanStr, len, stdStr, maxValStr, minValStr);
-                     printf ("           median = %*s     95%% = %s\n", len, medianStr, percentStr);
+                     if ((c = ArgusParser->RaFieldDelimiter) != '\0') {
+                        printf ("N=%d%cmean=%s%cstddev=%s%cmax=%s%cmin=%s%c",
+                                     tagr->act.n, c, meanStr, c, stdStr, c, maxValStr, c, minValStr, c);
+                        printf ("median=%s%c95%%=%s", medianStr, c, percentStr);
+                     } else {
+                        printf (" N = %-6d  mean = %*s  stddev = %*s  max = %s  min = %s\n",
+                                     tagr->act.n, len, meanStr, len, stdStr, maxValStr, minValStr);
+                        printf ("           median = %*s     95%% = %s\n", len, medianStr, percentStr);
+                     }
+
                      if (numModes > 0) {
                         int tlen = strlen(modeStr);
                         if (tlen > len)
                            len = tlen;
 
-                        printf ("             mode = %*s\n", len, modeStr);
+                        if ((c = ArgusParser->RaFieldDelimiter) != '\0')
+                           printf ("%cmode=%s", c, modeStr);
+                        else
+                           printf ("             mode = %*s\n", len, modeStr);
                      }
+
+                     if ((c = ArgusParser->RaFieldDelimiter) != '\0')
+                        printf ("\n");
+                        
                   }
                }
 
                if (parser->ArgusWfileList == NULL) {
                   if (ArgusParser->RaLabel == NULL) {
-                     char rangebuf[128];
+                     char rangebuf[128], c;
                      int size = parser->pflag;
                      int rblen = 0;
 
-                     sprintf (rangebuf, "%*.*e-%*.*e ", size, size, be, size, size, be);
-                     rblen = (strlen(rangebuf) - strlen("Interval"))/2;
+                     if (ArgusPrintInterval) 
+                        sprintf (rangebuf, "%*.*e-%*.*e ", size, size, be, size, size, be);
+                     else
+                        sprintf (rangebuf, "%*.*e ", size, size, be);
+
+                     rblen = ((strlen(rangebuf) - strlen("Interval"))/4) * 2;
 
                      ArgusParser->RaLabel = ArgusGenerateLabel(ArgusParser, ns);
-                     printf (" Class  %*.*s%s%*.*s       Freq    Rel.Freq     Cum.Freq    %s\n",
-                          rblen, rblen, " ", "Interval", rblen, rblen, " ", ArgusParser->RaLabel);
+
+                     if ((c = ArgusParser->RaFieldDelimiter) != '\0') {
+                        printf ("Class%cInterval%cFreq%cRel.Freq%cCum.Freq", c, c, c, c);
+                        if (ArgusParser->RaLabel && strlen(ArgusParser->RaLabel)) {
+                           printf ("%c%s\n", c, ArgusParser->RaLabel);
+                        } else
+                           printf ("\n");
+                     } else {
+                        if (ArgusPrintInterval) 
+                           printf (" Class    %*.*s%s%*.*s       Freq    Rel.Freq     Cum.Freq    %s\n",
+                                rblen, rblen, " ", "Interval", rblen, rblen, " ", ArgusParser->RaLabel);
+                        else
+                           printf (" Class   %*.*s%s%*.*s       Freq    Rel.Freq     Cum.Freq    %s\n",
+                                rblen, rblen, " ", "Interval", rblen, rblen, " ", ArgusParser->RaLabel);
+                     }
                   }
                }
 
@@ -341,7 +380,8 @@ RaParseComplete (int sig)
                            }
 
                         } else {
-                           int size = parser->pflag;
+                           int printThis = 0, size = parser->pflag;
+
                            bzero(buf, MAXSTRLEN);
                            freq = 0; rel = 0.0;
 
@@ -369,30 +409,50 @@ RaParseComplete (int sig)
                                           bf += parser->RaHistoBinSize;
                                     } while (!(bf >= agr->act.maxval));
 
-                                    printf ("%6d*  %*.*e-%*.*e %10d   %8.4f%%    %8.4f%%    %s\n",
-                                               class++, size, size, be, size, size, bf, freq, rel * 100.0, relcum * 100.0, buf);
+                                    printThis++;
                                  }
 
                               } else {
                                  if (!ArgusProcessNoZero || (ArgusProcessNoZero && (freq > 0.0))) {
                                     if (i == 0) {
                                        if (be != bs)
-                                          printf ("%6d*  %*.*e-%*.*e %10d   %8.4f%%    %8.4f%%    %s\n",
-                                                  class++, size, size, bs, size, size, be, freq, rel * 100.0, relcum * 100.0, buf);
+                                          printThis++;
                                     } else
-                                       printf ("%6d   %*.*e-%*.*e %10d   %8.4f%%    %8.4f%%    %s\n",
-                                                  class++, size, size, bs, size, size, be, freq, rel * 100.0, relcum * 100.0, buf);
+                                       printThis++;
                                  }
                               }
                            } else {
                               if (!ArgusProcessNoZero) {
                                  if (i == 0) {
                                     if (be != bs)
-                                       printf ("%6d*  %*.*e-%*.*e %10d   %8.4f%%    %8.4f%%    %s\n",
-                                                  class++, size, size, bs, size, size, be, freq, rel * 100.0, relcum * 100.0, buf);
+                                       printThis++;
                                  } else
+                                    printThis++;
+                              }
+                           }
+
+                           if (printThis) {
+                              char c;
+                              if ((c = ArgusParser->RaFieldDelimiter) != '\0') {
+                                 if (ArgusPrintInterval) {
+                                    printf ("%d%c%e-%e%c%d%c%f%%%c%f%%",
+                                          class++, c, bs, be, c, freq, c, rel * 100.0, c, relcum * 100.0);
+                                 } else {
+                                    printf ("%d%c%e%c%d%c%f%%%c%f%%",
+                                          class++, c, bs, c, freq, c, rel * 100.0, c, relcum * 100.0);
+                                 }
+                                 if (strlen(buf)) {
+                                    printf ("%c%s\n", c, buf);
+                                 } else
+                                    printf ("\n");
+                              } else {
+                                 if (ArgusPrintInterval) {
                                     printf ("%6d   %*.*e-%*.*e %10d   %8.4f%%    %8.4f%%    %s\n",
-                                                  class++, size, size, bs, size, size, be, freq, rel * 100.0, relcum * 100.0, buf);
+                                          class++, size, size, bs, size, size, be, freq, rel * 100.0, relcum * 100.0, buf);
+                                 } else {
+                                    printf ("%6d   %*.*e %10d   %8.4f%%    %8.4f%%    %s\n",
+                                          class++, size, size, bs, freq, rel * 100.0, relcum * 100.0, buf);
+                                 }
                               }
                            }
                         }
@@ -541,8 +601,9 @@ RaProcessRecord (struct ArgusParserStruct *parser, struct ArgusRecordStruct *arg
             }
 
             case 1: {
+               double range, value, frac, inte;
+
                if (parser->RaHistoRangeState & ARGUS_HISTO_RANGE_UNSPECIFIED) {
-                  double range, value, frac;
                   int cycle = 0;
 
                   parser->RaHistoRangeState &= ~ARGUS_HISTO_RANGE_UNSPECIFIED;
@@ -569,10 +630,8 @@ RaProcessRecord (struct ArgusParserStruct *parser, struct ArgusRecordStruct *arg
                   parser->RaHistoBinSize = ((parser->RaHistoEnd - parser->RaHistoStart) * 1.0) / parser->RaHistoBins * 1.0;
                }
 
+               value = agg->RaMetricFetchAlgorithm(argus);
                if (parser->RaHistoRangeState & ARGUS_HISTO_CAPTURE_VALUES) {
-                     double frac, value, inte;
-                     value = agg->RaMetricFetchAlgorithm(argus);
-
                      if ((value >= parser->RaHistoStart) && (value <= parser->RaHistoEnd)) {
                         if ((frac = modf(value, &inte)) != 0.0)
                             RaValuesAreIntegers = 0;
@@ -592,8 +651,20 @@ RaProcessRecord (struct ArgusParserStruct *parser, struct ArgusRecordStruct *arg
                   }
                }
 
+               if (ArgusParser && ArgusParser->ArgusAggregator) {
+                  struct ArgusAgrStruct *agr = (void *)argus->dsrs[ARGUS_AGR_INDEX];
+                  if (agr) {
+                     agr->count = 1;
+                     agr->act.maxval = value;
+                     agr->act.minval = value;
+                     agr->act.meanval = value;
+                     agr->act.n = 1;
+                     agr->act.stdev = 0;
+                  }
+               }
+
                if (agg && agg->RaMetricFetchAlgorithm != NULL)
-                  ArgusHistoTallyMetric (parser, argus);
+                  ArgusHistoTallyMetric (parser, argus, value);
                break;
             }
          }

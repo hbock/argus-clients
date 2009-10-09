@@ -41,9 +41,9 @@
  */
 
 /* 
- * $Id: //depot/argus/clients/common/argus_code.c#44 $
- * $DateTime: 2009/05/21 00:00:16 $
- * $Change: 1740 $
+ * $Id: //depot/argus/clients/common/argus_code.c#45 $
+ * $DateTime: 2009/09/13 22:17:09 $
+ * $Change: 1799 $
  */
 
 #include <compat.h>
@@ -157,7 +157,7 @@ static struct ablock *Argusgen_load(float, int, u_int);
 static struct ablock *Argusgen_inter(float, int, u_int);
 static struct ablock *Argusgen_jitter(float, int, u_int);
 static struct ablock *Argusgen_dur(float, int, u_int);
-static struct ablock *Argusgen_avgdur(float, int, u_int);
+static struct ablock *Argusgen_mean(float, int, u_int);
 static struct ablock *Argusgen_encaps(int, int, u_int);
 static u_int net_mask(u_int *);
 static struct slist *xfer_to_x(struct arth *);
@@ -1889,13 +1889,13 @@ Argusgen_duratom( int off, float v, int op)
 }
 
 static struct ablock *
-Argusgen_avgduratom( int off, long v, int op)
+Argusgen_meanatom( int off, long v, int op)
 {
    struct ablock *b0;
 
    b0 = Argusgen_cmp(-1, off, NFF_L, (u_int)v, op);
 #if defined(ARGUSDEBUG)
-   ArgusDebug (4, "Argusgen_avgduratom (%d, 0x%x) returns 0x%x\n", off, v, b0);
+   ArgusDebug (4, "Argusgen_meanatom (%d, 0x%x) returns 0x%x\n", off, v, b0);
 #endif
    return b0;
 }
@@ -2892,7 +2892,7 @@ Argusgen_dur(float v, int dir, u_int op)
 }
 
 static struct ablock *
-Argusgen_avgdur(float v, int dir, u_int op)
+Argusgen_mean(float v, int dir, u_int op)
 {
    struct ablock *b1 = NULL;
    struct ArgusRecordStruct argus;
@@ -2904,8 +2904,8 @@ Argusgen_avgdur(float v, int dir, u_int op)
    case Q_OR:
    case Q_DEFAULT:
    case Q_AND:
-      offset = ((char *)&argus.avgdur - (char *)&argus);
-      b1 = Argusgen_avgduratom(offset, v, op);
+      offset = ((char *)&argus.mean - (char *)&argus);
+      b1 = Argusgen_meanatom(offset, v, op);
       break;
 
    default:
@@ -2913,7 +2913,7 @@ Argusgen_avgdur(float v, int dir, u_int op)
    }
 
 #if defined(ARGUSDEBUG)
-   ArgusDebug (4, "Argusgen_avgdur (0x%x, %d) returns 0x%x\n", v, dir, b1);
+   ArgusDebug (4, "Argusgen_mean (0x%x, %d) returns 0x%x\n", v, dir, b1);
 #endif
 
    return b1;
@@ -4143,7 +4143,7 @@ Argusgen_ncode(char *s, u_int v, struct qual q, u_int op)
          break;
 
       case Q_AVGDUR:
-         b = Argusgen_avgdur(v, dir, op);
+         b = Argusgen_mean(v, dir, op);
          break;
 
       case Q_DELTADUR:
@@ -4218,7 +4218,7 @@ Argusgen_fcode(char *s, float v, struct qual q, u_int op)
          break;
 
       case Q_AVGDUR:
-         b = Argusgen_avgdur(v, dir, op);
+         b = Argusgen_mean(v, dir, op);
          break;
 
       case Q_PLOSS:

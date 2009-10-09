@@ -1,6 +1,6 @@
 %define name    argus-clients
 %define ver     3.0
-%define rel     0
+%define rel     2
 Summary: Argus Client Software
 Name: argus-clients
 Version: %ver

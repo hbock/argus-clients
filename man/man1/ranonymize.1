@@ -23,19 +23,18 @@ Copyright (c) 2000-2008 QoSient. All rights reserved.
 .B Ranonymize
 reads
 .BR argus
-data from an \fIargus-data\fP source, strips out fields, using the same
-strategies as \fBrastrip(1)\fP and anonymizes the remaining fields
-in Argus records, including the network addresses, protocol specific port
-numbers, timestamps, transaction reference numbers, TCP base sequence
-numbers, IP identifiers, and the record sequence numbers.
+data from an \fIargus-data\fP source, strips out specific fields, 
+and anonymizes the remaining fields in Argus records, including the network
+addresses, protocol specific port numbers, timestamps, transaction reference
+numbers, TCP base sequence numbers, IP identifiers, and any record sequence
+numbers.
 
 Anonymization is controlled through an anonymization configuration file.
 See \fBranonymize(5)\fP for a complete description.
 
 .SH OPTIONS
-Ranonymize, shares the same options as \fBrastrip(1)\fP.
-See \fBrastrip(1)\fP and \fBra(1)\fP for a complete description of
-\fBra options\fP.
+Ranonymize, shares all the same options as \fBra(1)\fP.
+See \fBra(1)\fP for a complete description of \fBra options\fP.
 \fBranonymize(1)\fP specific options are:
 .PP
 .PD 0

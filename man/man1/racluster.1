@@ -126,6 +126,12 @@ dst -> src TCP base sequence number.
 .B inode
 intermediate node, source of ICMP mapped events.
 .TP
+.B sco
+source ARIN country code, if present.
+.TP
+.B dco
+destination ARIN country code, if present.
+.TP
 .RE
 .TP 4 4
 .BI \-M "\| modes\^"
@@ -133,6 +139,15 @@ Supported modes are:
 .PP
 .RS
 .TP 15
+.B correct
+Attempt to correct the direction of flows by also searching the reverse
+flow key, if a match isn't found in the cache.  This mode is on by default
+when using the default full 5-tuple flow key definitions.
+.TP
+.B nocorrect
+Turn off flow correction for direction.  This mode is used by default
+if the flow key has been changed.
+.TP
 .B norep
 Do not generate an aggregate statistic for each flow.  This is used
 primarily when the output represents a single object.  Primarily used

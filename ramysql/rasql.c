@@ -549,6 +549,7 @@ RaSQLQueryTable (char **tables)
    }
 }
 
+#define ARGUSSQLMAXCOLUMNS	128
 
 void
 ArgusClientInit (struct ArgusParserStruct *parser)
@@ -558,6 +559,10 @@ ArgusClientInit (struct ArgusParserStruct *parser)
    int x, retn;
 
    if (!(parser->RaInitialized)) {
+      char *ArgusTableColumnName[ARGUSSQLMAXCOLUMNS];
+      char ArgusSQLStatement[MAXSTRLEN];
+      MYSQL_RES *mysqlRes;
+
       parser->RaInitialized++;
       parser->RaWriteOut = 0;
 
@@ -793,36 +798,47 @@ ArgusClientInit (struct ArgusParserStruct *parser)
          RaTables[0] = strdup(ArgusSQLTableNameBuf);
       }
 
-      if (parser->tflag) {
-         char ArgusSQLStatement[MAXSTRLEN];
-         char *timeField = NULL;
-         MYSQL_RES *mysqlRes;
+      bzero(ArgusTableColumnName, sizeof (ArgusTableColumnName));
+      sprintf (ArgusSQLStatement, "desc %s", RaTables[0]);
 
-         sprintf (ArgusSQLStatement, "desc %s", RaTables[0]);
-
-         if ((retn = mysql_real_query(&mysql, ArgusSQLStatement , strlen(ArgusSQLStatement))) != 0)
-            ArgusLog(LOG_ERR, "mysql_real_query error %s", mysql_error(&mysql));
-         else {
-            if ((mysqlRes = mysql_store_result(&mysql)) != NULL) {
-               if ((retn = mysql_num_fields(mysqlRes)) > 0) {
-                  while ((row = mysql_fetch_row(mysqlRes))) {
-                     if (strstr(row[0], "time")) {
-                        if (!(strcmp("stime", row[0]))) {
-                           timeField = "stime";
-                           break;
-                        }
-                        if (!(strcmp("ltime", row[0])))
-                           timeField = "ltime";
-                     }
-                  }
-               }
+      if ((retn = mysql_real_query(&mysql, ArgusSQLStatement , strlen(ArgusSQLStatement))) != 0)
+         ArgusLog(LOG_ERR, "mysql_real_query error %s", mysql_error(&mysql));
+      else {
+         if ((mysqlRes = mysql_store_result(&mysql)) != NULL) {
+            if ((retn = mysql_num_fields(mysqlRes)) > 0) {
+               int ind = 0;
+               while ((row = mysql_fetch_row(mysqlRes)))
+                  ArgusTableColumnName[ind++] = strdup(row[0]);
 
                mysql_free_result(mysqlRes);
             }
-
-            if (timeField == NULL)
-               ArgusLog (LOG_ERR, "ArgusClientInit () time range specified but schema does not suppor time\n");
          }
+      }
+
+      if (!(parser->sflag)) {
+         int i;
+         bzero(parser->RaSOptionStrings, sizeof (parser->RaSOptionStrings));
+         for (i = 0; (ArgusTableColumnName[i] != NULL) && (i < ARGUSSQLMAXCOLUMNS); i++)
+            parser->RaSOptionStrings[i] = ArgusTableColumnName[i];
+
+         ArgusProcessSOptions(parser);
+      }
+
+      if (parser->tflag) {
+         char *timeField = NULL;
+         int i;
+
+         for (i = 0; (ArgusTableColumnName[i] != NULL) && (i < ARGUSSQLMAXCOLUMNS); i++) {
+            if (!(strcmp("ltime", ArgusTableColumnName[i]))) {
+               timeField = "ltime";
+               break;
+            }
+            if (!(strcmp("stime", ArgusTableColumnName[i])))
+               timeField = "stime";
+         }
+
+         if (timeField == NULL)
+            ArgusLog (LOG_ERR, "ArgusClientInit () time range specified but schema does not suppor time\n");
 
          if (ArgusParser->ArgusSQLStatement != NULL) {
          } else {

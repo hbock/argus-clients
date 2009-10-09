@@ -25,9 +25,9 @@
  * written by Carter Bullard
  * QoSient, LLC
  *
- * $Id: //depot/argus/clients/clients/ratree.c#14 $
- * $DateTime: 2009/04/13 19:15:53 $
- * $Change: 1710 $
+ * $Id: //depot/argus/clients/clients/ratree.c#15 $
+ * $DateTime: 2009/08/31 11:54:50 $
+ * $Change: 1796 $
  */
 
 #if defined(CYGWIN)
@@ -79,6 +79,8 @@ int ArgusDebugTree = 0;
 #define ARGUS_VISITED		0x10
 
 
+struct RaAddressStruct **ArgusTreeAddrTree = NULL;
+
 void
 ArgusClientInit (struct ArgusParserStruct *parser)
 {
@@ -91,7 +93,7 @@ ArgusClientInit (struct ArgusParserStruct *parser)
       if ((ArgusLabeler = ArgusNewLabeler(parser, ARGUS_LABELER_ADDRESS)) == NULL)
          ArgusLog (LOG_ERR, "ArgusClientInit: ArgusNewLabeler error");
 
-      if ((ArgusLabeler->ArgusAddrTree = ArgusCalloc(128, sizeof(void *))) == NULL)
+      if ((ArgusTreeAddrTree = ArgusCalloc(128, sizeof(void *))) == NULL)
          ArgusLog (LOG_ERR, "RaReadAddressConfig: ArgusCalloc error %s\n", strerror(errno));
 
       parser->ArgusLabeler = ArgusLabeler;
@@ -106,15 +108,15 @@ ArgusClientInit (struct ArgusParserStruct *parser)
             if (!(strncasecmp (mode->mode, "debug.mol", 9))) {
                parser->ArgusLabeler->RaPrintLabelTreeMode = ARGUS_MOL;
 
-               RaMapLabelMol (ArgusLabeler, ArgusLabeler->ArgusAddrTree[AF_INET], 0, 0, 0, 0);
-               RaPrintLabelMol (ArgusLabeler, ArgusLabeler->ArgusAddrTree[AF_INET], 0, 0, 0, 0);
+               RaMapLabelMol (ArgusLabeler, ArgusTreeAddrTree[AF_INET], 0, 0, 0, 0);
+               RaPrintLabelMol (ArgusLabeler, ArgusTreeAddrTree[AF_INET], 0, 0, 0, 0);
                exit(0);
             } else
             if ((!(strncasecmp (mode->mode, "debug.tree", 10))) ||
                 (!(strncasecmp (mode->mode, "debug", 5)))) {
                ArgusDebugTree = 1;
                parser->ArgusLabeler->RaPrintLabelTreeMode = ARGUS_TREE;
-               RaPrintLabelTree (ArgusLabeler, ArgusLabeler->ArgusAddrTree[AF_INET], 0, 0);
+               RaPrintLabelTree (ArgusLabeler, ArgusTreeAddrTree[AF_INET], 0, 0);
             } else
             if (!(strncasecmp (mode->mode, "graph", 5))) {
                parser->ArgusLabeler->RaPrintLabelTreeMode = ARGUS_GRAPH;
@@ -155,9 +157,9 @@ RaParseComplete (int sig)
          } 
       }
 
-      if (ArgusLabeler && (ArgusLabeler->ArgusAddrTree && (ArgusLabeler->ArgusAddrTree[AF_INET] != NULL))) {
-         RaPruneAddressTree(ArgusLabeler, ArgusLabeler->ArgusAddrTree[AF_INET], 0);
-         RaPrintLabelTree (ArgusLabeler, ArgusLabeler->ArgusAddrTree[AF_INET], 0, 0);
+      if (ArgusLabeler && (ArgusTreeAddrTree && (ArgusTreeAddrTree[AF_INET] != NULL))) {
+         RaPruneAddressTree(ArgusLabeler, ArgusTreeAddrTree[AF_INET], 0);
+         RaPrintLabelTree (ArgusLabeler, ArgusTreeAddrTree[AF_INET], 0, 0);
       }
       fflush(stdout);
       exit(0);
@@ -206,7 +208,7 @@ RaProcessAddress (struct ArgusParserStruct *parser, struct ArgusRecordStruct *ar
 {
    struct RaAddressStruct *raddr;
 
-   if (ArgusLabeler->ArgusAddrTree != NULL) {
+   if (ArgusTreeAddrTree != NULL) {
       if (addr && *addr) {
          switch (type) {
             case ARGUS_TYPE_IPV4: {
@@ -222,11 +224,15 @@ RaProcessAddress (struct ArgusParserStruct *parser, struct ArgusRecordStruct *ar
                   node->addr.addr[0] = *addr;
                   node->addr.mask[0] = 0xFFFFFFFF << (32 - level);
 
-                  if ((raddr = RaFindAddress (parser, ArgusLabeler->ArgusAddrTree[node->addr.type], node, ARGUS_EXACT_MATCH)) == NULL) {
-                     RaInsertAddress (parser, ArgusLabeler, ArgusLabeler->ArgusAddrTree[node->addr.type], node, ARGUS_VISITED);
+                  if (ArgusTreeAddrTree[node->addr.type] == NULL) {
+                     ArgusTreeAddrTree[node->addr.type] = node;
                   } else {
-                     ArgusFree(node);
-                     node = raddr;
+                     if ((raddr = RaFindAddress (parser, ArgusTreeAddrTree[node->addr.type], node, ARGUS_EXACT_MATCH)) == NULL) {
+                        RaInsertAddress (parser, ArgusLabeler, ArgusTreeAddrTree, node, ARGUS_VISITED);
+                     } else {
+                        ArgusFree(node);
+                        node = raddr;
+                     }
                   }
 
                   while (node != NULL) {
@@ -364,9 +370,9 @@ RaProcessRecord (struct ArgusParserStruct *parser, struct ArgusRecordStruct *ns)
    }
 
    if (ArgusDebugTree)
-      if (ArgusLabeler && (ArgusLabeler->ArgusAddrTree && (ArgusLabeler->ArgusAddrTree[AF_INET] != NULL))) {
+      if (ArgusLabeler && (ArgusTreeAddrTree && (ArgusTreeAddrTree[AF_INET] != NULL))) {
          fprintf (stdout, "----------------------\n");
-         RaPrintLabelTree (ArgusLabeler, ArgusLabeler->ArgusAddrTree[AF_INET], 0, 0);
+         RaPrintLabelTree (ArgusLabeler, ArgusTreeAddrTree[AF_INET], 0, 0);
          fprintf (stdout, "----------------------\n");
       }
 }

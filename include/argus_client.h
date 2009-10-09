@@ -63,7 +63,7 @@
 
 
 #define RA_TRANSDURATION        1
-#define RA_AVGDURATION          2
+#define RA_MEAN                 2
 #define RA_DELTADURATION        3
 
 #define RA_MODELNAMETAGSTR	"RACLUSTER_MODEL_NAME="
@@ -1088,9 +1088,9 @@ signed long long RaGetuSecAvgDuration (struct ArgusRecordStruct *);
 float RaGetFloatSrcDuration(struct ArgusRecordStruct *);
 float RaGetFloatDstDuration(struct ArgusRecordStruct *);
 float RaGetFloatDuration(struct ArgusRecordStruct *);
-float RaGetFloatAvgDuration(struct ArgusRecordStruct *);
-float RaGetFloatMinDuration(struct ArgusRecordStruct *);
-float RaGetFloatMaxDuration(struct ArgusRecordStruct *);
+float RaGetFloatMean(struct ArgusRecordStruct *);
+float RaGetFloatMin(struct ArgusRecordStruct *);
+float RaGetFloatMax(struct ArgusRecordStruct *);
 
 void RaProcessRecord (struct ArgusParserStruct *, struct ArgusRecordStruct *);
 void RaProcessManRecord (struct ArgusParserStruct *, struct ArgusRecordStruct *);
@@ -1178,7 +1178,7 @@ struct RaSrvSignature *RaValidateService(struct ArgusParserStruct *, struct Argu
 extern struct ArgusLabelerStruct *ArgusNewLabeler (struct ArgusParserStruct *, int);
 
 int ArgusHistoMetricParse (struct ArgusParserStruct *, struct ArgusAggregatorStruct *);
-int ArgusHistoTallyMetric (struct ArgusParserStruct *, struct ArgusRecordStruct *);
+int ArgusHistoTallyMetric (struct ArgusParserStruct *, struct ArgusRecordStruct *, double);
 
 struct RaBinStruct *RaNewBin (struct ArgusParserStruct *, struct RaBinProcessStruct *, struct ArgusRecordStruct *, long long, int);
 void RaDeleteBin (struct ArgusParserStruct *, struct RaBinStruct *);
@@ -1234,9 +1234,9 @@ extern signed long long RaGetuSecAvgDuration (struct ArgusRecordStruct *);
 extern float RaGetFloatSrcDuration(struct ArgusRecordStruct *);
 extern float RaGetFloatDstDuration(struct ArgusRecordStruct *);
 extern float RaGetFloatDuration(struct ArgusRecordStruct *);
-extern float RaGetFloatAvgDuration(struct ArgusRecordStruct *);
-extern float RaGetFloatMinDuration(struct ArgusRecordStruct *);
-extern float RaGetFloatMaxDuration(struct ArgusRecordStruct *);
+extern float RaGetFloatMean(struct ArgusRecordStruct *);
+extern float RaGetFloatMin(struct ArgusRecordStruct *);
+extern float RaGetFloatMax(struct ArgusRecordStruct *);
 
 extern void RaProcessRecord (struct ArgusParserStruct *, struct ArgusRecordStruct *);
 extern void RaProcessManRecord (struct ArgusParserStruct *, struct ArgusRecordStruct *);
@@ -1315,7 +1315,7 @@ extern int ArgusCheckTime (struct ArgusParserStruct *, struct ArgusRecordStruct 
 extern int ArgusCheckTimeout (struct ArgusParserStruct *, struct ArgusRecordStruct *, struct ArgusRecordStruct *);
 
 extern int ArgusHistoMetricParse (struct ArgusParserStruct *, struct ArgusAggregatorStruct *);
-extern int ArgusHistoTallyMetric (struct ArgusParserStruct *, struct ArgusRecordStruct *);
+extern int ArgusHistoTallyMetric (struct ArgusParserStruct *, struct ArgusRecordStruct *, double);
 
 extern struct RaBinStruct *RaNewBin (struct ArgusParserStruct *, struct RaBinProcessStruct *, struct ArgusRecordStruct *, long long, int);
 extern void RaDeleteBin (struct ArgusParserStruct *, struct RaBinStruct *);

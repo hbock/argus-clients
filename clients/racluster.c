@@ -28,9 +28,9 @@
  */
 
 /* 
- * $Id: //depot/argus/clients/clients/racluster.c#46 $
- * $DateTime: 2009/05/19 22:17:26 $
- * $Change: 1738 $
+ * $Id: //depot/argus/clients/clients/racluster.c#47 $
+ * $DateTime: 2009/08/31 11:54:50 $
+ * $Change: 1796 $
  */
 
 #if defined(CYGWIN)
@@ -71,6 +71,8 @@ ArgusClientInit (struct ArgusParserStruct *parser)
 
       if ((mode = parser->ArgusModeList) != NULL) {
          while (mode) {
+            if (!(strncasecmp (mode->mode, "correct", 7)))
+               correct = 1;
             if (!(strncasecmp (mode->mode, "nocorrect", 9)))
                correct = 0;
             if (!(strncasecmp (mode->mode, "rmon", 4)))
@@ -93,6 +95,8 @@ ArgusClientInit (struct ArgusParserStruct *parser)
 
       if ((parser->ArgusMaskList) == NULL)
          parser->ArgusReverse = 1;
+      else
+         parser->ArgusReverse = 0;
 
       if (parser->ArgusFlowModelFile) {
          if ((parser->ArgusAggregator = ArgusParseAggregator(parser, parser->ArgusFlowModelFile, NULL)) == NULL)
@@ -106,6 +110,10 @@ ArgusClientInit (struct ArgusParserStruct *parser)
          if (parser->ArgusAggregator->correct != NULL)
             free(parser->ArgusAggregator->correct);
          parser->ArgusAggregator->correct = NULL;
+      } else {
+         if (parser->ArgusAggregator->correct != NULL)
+            free(parser->ArgusAggregator->correct);
+         parser->ArgusAggregator->correct = strdup("yes");
       }
       
       if (parser->Hstr)
@@ -333,6 +341,8 @@ usage ()
    fprintf (stderr, "          -m flow key fields       specify fields to be used as flow keys.\n");
    fprintf (stderr, "          -M modes                 modify mode of operation.\n");
    fprintf (stderr, "             Available modes:      \n");
+   fprintf (stderr, "                correct            turn on direction correction (default)\n");
+   fprintf (stderr, "                nocorrect          turn off direction correction\n");
    fprintf (stderr, "                ind                aggregate multiple files independently\n");
    fprintf (stderr, "                norep              do not report aggregation statistics\n");
    fprintf (stderr, "                rmon               convert bi-directional data into rmon in/out data\n");

@@ -184,7 +184,7 @@ struct ArgusRecordStruct {
    struct ArgusRecordHeader hdr;
    struct ArgusDSRHeader *dsrs[ARGUSMAXDSRTYPE];
    struct ArgusCorStruct *correlates;
-   float srate, drate, sload, dload, dur, avgdur;
+   float srate, drate, sload, dload, dur, mean;
    float sploss, dploss;
    long long offset;
 };
@@ -304,10 +304,10 @@ struct ArgusParserStruct {
    signed char Netflag, nflag, Normflag, Pctflag, pidflag;
 
    signed char tflag, uflag, Wflag, vflag, Vflag, iflag;
-   signed char Iflag, Tflag, rflag, Rflag, Sflag, xflag;
-   signed char Xflag, XMLflag, zflag, Zflag, domainonly;
+   signed char Iflag, Tflag, rflag, Rflag, Sflag, sflag, xflag;
+   signed char Xflag, XMLflag, yflag, zflag, Zflag, domainonly;
 
-   char *estr, *Hstr, *Mflag, *sflag;
+   char *estr, *Hstr, *Mflag;
 
    double Bflag;
    int  debugflag, RaInitialized;

@@ -151,9 +151,12 @@ Illegal modes are not detectable by the standard library, and so unexpected
 results in command line parsing may occur if care is not taken with use
 of this option.
 .TP 4 4
-.B \-N <num[-num]>
-Process \fB<num>\fP or the \fB<num - num >\fP range of input records.  These
-records must match the input filter if any filter is used.
+.B \-N <num>
+.B \-N <start-end>
+.B \-N <start+num>
+Process the first \fB<num>\fP records, the inclusive range \fB<start - end >\fP
+of records, or process <num + 1> records starting at start.  These
+are the range of records that match the input filter if any filter is used.
 .TP 4 4
 .B \-p <digits>
 Print \fB<digits>\fP number of units of precision for floating point values.

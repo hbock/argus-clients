@@ -123,9 +123,9 @@ int ArgusSortStartTime (struct ArgusRecordStruct *, struct ArgusRecordStruct *);
 int ArgusSortLastTime (struct ArgusRecordStruct *, struct ArgusRecordStruct *);
 int ArgusSortTransactions (struct ArgusRecordStruct *, struct ArgusRecordStruct *);
 int ArgusSortDuration (struct ArgusRecordStruct *, struct ArgusRecordStruct *);
-int ArgusSortAvgDuration (struct ArgusRecordStruct *, struct ArgusRecordStruct *);
-int ArgusSortMinDuration (struct ArgusRecordStruct *, struct ArgusRecordStruct *);
-int ArgusSortMaxDuration (struct ArgusRecordStruct *, struct ArgusRecordStruct *);
+int ArgusSortMean (struct ArgusRecordStruct *, struct ArgusRecordStruct *);
+int ArgusSortMin (struct ArgusRecordStruct *, struct ArgusRecordStruct *);
+int ArgusSortMax (struct ArgusRecordStruct *, struct ArgusRecordStruct *);
 int ArgusSortSrcMac (struct ArgusRecordStruct *, struct ArgusRecordStruct *);
 int ArgusSortDstMac (struct ArgusRecordStruct *, struct ArgusRecordStruct *);
 int ArgusSortSrcAddr (struct ArgusRecordStruct *, struct ArgusRecordStruct *);
@@ -185,9 +185,9 @@ int (*ArgusSortAlgorithmTable[MAX_SORT_ALG_TYPES])(struct ArgusRecordStruct *, s
    ArgusSortLastTime,
    ArgusSortTransactions,
    ArgusSortDuration,
-   ArgusSortAvgDuration,
-   ArgusSortMinDuration,
-   ArgusSortMaxDuration,
+   ArgusSortMean,
+   ArgusSortMin,
+   ArgusSortMax,
    ArgusSortSrcMac,
    ArgusSortDstMac,
    ArgusSortSrcAddr,
@@ -248,9 +248,9 @@ char *ArgusSortKeyWords[MAX_SORT_ALG_TYPES] = {
    "ltime",
    "trans",
    "dur",
-   "avgdur",
-   "mindur",
-   "maxdur",
+   "mean",
+   "min",
+   "max",
    "smac",
    "dmac",
    "saddr",
@@ -322,9 +322,9 @@ extern int ArgusSortStartTime (struct ArgusRecordStruct *, struct ArgusRecordStr
 extern int ArgusSortLastTime (struct ArgusRecordStruct *, struct ArgusRecordStruct *);
 extern int ArgusSortTransactions (struct ArgusRecordStruct *, struct ArgusRecordStruct *);
 extern int ArgusSortDuration (struct ArgusRecordStruct *, struct ArgusRecordStruct *);
-extern int ArgusSortAvgDuration (struct ArgusRecordStruct *, struct ArgusRecordStruct *);
-extern int ArgusSortMinDuration (struct ArgusRecordStruct *, struct ArgusRecordStruct *);
-extern int ArgusSortMaxDuration (struct ArgusRecordStruct *, struct ArgusRecordStruct *);
+extern int ArgusSortMean (struct ArgusRecordStruct *, struct ArgusRecordStruct *);
+extern int ArgusSortMin (struct ArgusRecordStruct *, struct ArgusRecordStruct *);
+extern int ArgusSortMax (struct ArgusRecordStruct *, struct ArgusRecordStruct *);
 extern int ArgusSortSrcAddr (struct ArgusRecordStruct *, struct ArgusRecordStruct *);
 extern int ArgusSortDstAddr (struct ArgusRecordStruct *, struct ArgusRecordStruct *);
 extern int ArgusSortProtocol (struct ArgusRecordStruct *, struct ArgusRecordStruct *);
